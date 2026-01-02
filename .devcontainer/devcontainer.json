@@ -17,7 +17,6 @@
     "vscode": {
       "extensions": [
         "actboy168.tasks",
-        "eamodio.gitlens",
         "dbaeumer.vscode-eslint"
       ],
       "settings": {
