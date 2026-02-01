@@ -13,7 +13,8 @@
     "lint:fix": "eslint --fix && prettier --write .",
     "test": "node --run lint",
     "test:spelling": "cspell .",
-    "check": "node check.js ../../config/config.js || true"
+    "check": "node check.js ../../config/config.js || true",
+    "mmcheck": "node scripts/magicmirror-check.mjs || true"
   },
   "keywords": [
     "MagicMirror²",
@@ -27,15 +28,15 @@
     "node": ">=20"
   },
   "dependencies": {
-    "undici": "^7.18.2"
+    "undici": "^7.19.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "cspell": "^9.6.0",
+    "cspell": "^9.6.2",
     "eslint": "^9.39.2",
     "eslint-plugin-n": "^17.23.2",
-    "globals": "^17.0.0",
-    "prettier": "^3.8.0",
+    "globals": "^17.3.0",
+    "prettier": "^3.8.1",
     "prettier-plugin-jinja-template": "2.1.0"
   }
 }
