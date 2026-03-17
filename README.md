@@ -84,6 +84,16 @@ You can also set the retentiondays in the MMM-Photoprism2.js file. By default it
 3. Generate a new API key
 4. Copy the key and use it in the module configuration
 
+## Architecture: Why a node_helper?
+
+This module uses a `node_helper.js` backend component instead of making API calls directly from the frontend. The primary reason is **CORS (Cross-Origin Resource Sharing)**.
+
+PhotoPrism APIs typically don't include permissive CORS headers that would allow a browser-based MagicMirror module to make direct requests. The browser would block these requests due to the same-origin policy. By using a Node.js-based `node_helper`, the module:
+
+- Bypasses CORS restrictions (Node.js is not subject to browser CORS policies)
+- Acts as a server-side proxy between MagicMirror and PhotoPrism
+- Follows the standard MagicMirror module architecture pattern
+
 ## Troubleshooting
 
 The module includes configurable logging. Set `logLevel` in the module config (frontend) to control browser console output. Valid values: `error`, `warn`, `info`, `debug`.

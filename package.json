@@ -1,6 +1,6 @@
 {
   "name": "mmm-photoprism2",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "MagicMirror² module to display random photos from PhotoPrism albums",
   "main": "MMM-Photoprism2.js",
   "type": "commonjs",
@@ -25,10 +25,7 @@
   "author": "HeikoGr",
   "license": "MIT",
   "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "undici": "^7.24.3"
+    "node": ">=20.18.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

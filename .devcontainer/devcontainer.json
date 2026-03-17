@@ -15,10 +15,7 @@
   "forwardPorts": [8080],
   "customizations": {
     "vscode": {
-      "extensions": [
-        "actboy168.tasks",
-        "dbaeumer.vscode-eslint"
-      ],
+      "extensions": ["actboy168.tasks", "dbaeumer.vscode-eslint"],
       "settings": {
         "editor.formatOnSave": true,
         "files.trimTrailingWhitespace": true

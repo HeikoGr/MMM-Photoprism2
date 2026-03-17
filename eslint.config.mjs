@@ -22,7 +22,13 @@ export default defineConfig([
       n: pluginN
     },
     rules: {
-      ...pluginN.configs.recommended.rules
+      ...pluginN.configs.recommended.rules,
+      "n/no-unsupported-features/node-builtins": [
+        "error",
+        {
+          ignores: ["fetch"]
+        }
+      ]
     }
   },
   {

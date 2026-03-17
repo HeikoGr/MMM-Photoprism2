@@ -1,7 +1,6 @@
 /* eslint-disable n/no-missing-require */
 const NodeHelper = require("node_helper");
 /* eslint-enable n/no-missing-require */
-const { fetch } = require("undici");
 
 // Hilfsfunktion zum Bauen eines Querystrings
 function withQuery(url, params) {

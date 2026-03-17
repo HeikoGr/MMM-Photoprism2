@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
-import fs from 'node:fs/promises';
-import { existsSync, readFileSync } from 'node:fs';
-import process from 'node:process';
-import { exec, spawn } from 'node:child_process';
-import readline from 'node:readline';
-import { promisify } from 'node:util';
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import fs from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
+import process from "node:process";
+import { exec, spawn } from "node:child_process";
+import readline from "node:readline";
+import { promisify } from "node:util";
 
 const execAsync = promisify(exec);
-const UPSTREAM_REPO = 'https://github.com/MagicMirrorOrg/MagicMirror-3rd-Party-Modules.git';
+const UPSTREAM_REPO =
+  "https://github.com/MagicMirrorOrg/MagicMirror-3rd-Party-Modules.git";
 
 // ============================================================================
 // Utility Functions
@@ -40,7 +41,7 @@ function extractLinks(text, urlMap) {
 /**
  * Smart text wrapping that keeps sentences and parenthetical expressions together
  */
-function smartWrap(text, maxWidth = null, indent = '', hangingIndent = '') {
+function smartWrap(text, maxWidth = null, indent = "", hangingIndent = "") {
   const width = maxWidth || process.stdout.columns || 80;
   if (indent.length + text.length <= width) {
     return indent + text;
@@ -80,7 +81,7 @@ function smartWrap(text, maxWidth = null, indent = '', hangingIndent = '') {
     remaining = remaining.slice(1);
   }
 
-  let currentLine = '';
+  let currentLine = "";
   let isFirstLine = true;
 
   for (const chunk of chunks) {
@@ -88,7 +89,9 @@ function smartWrap(text, maxWidth = null, indent = '', hangingIndent = '') {
     if (!trimmedChunk) continue;
 
     const lineIndent = isFirstLine ? indent : fullHangingIndent;
-    const testLine = currentLine ? currentLine + ' ' + trimmedChunk : trimmedChunk;
+    const testLine = currentLine
+      ? currentLine + " " + trimmedChunk
+      : trimmedChunk;
 
     if (lineIndent.length + testLine.length <= width) {
       currentLine = testLine;
@@ -106,7 +109,7 @@ function smartWrap(text, maxWidth = null, indent = '', hangingIndent = '') {
     lines.push(lineIndent + currentLine);
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -121,11 +124,16 @@ function findModulesDirectory(overridePath = null) {
   let checkPath = currentDir;
 
   for (let i = 0; i < 5; i++) {
-    const modulesPath = path.join(checkPath, 'modules');
-    if (existsSync(modulesPath) && existsSync(path.join(checkPath, 'package.json'))) {
+    const modulesPath = path.join(checkPath, "modules");
+    if (
+      existsSync(modulesPath) &&
+      existsSync(path.join(checkPath, "package.json"))
+    ) {
       try {
-        const pkg = JSON.parse(readFileSync(path.join(checkPath, 'package.json'), 'utf8'));
-        if (pkg.name === 'magicmirror') {
+        const pkg = JSON.parse(
+          readFileSync(path.join(checkPath, "package.json"), "utf8")
+        );
+        if (pkg.name === "magicmirror") {
           return modulesPath;
         }
       } catch {
@@ -135,12 +143,14 @@ function findModulesDirectory(overridePath = null) {
     checkPath = path.dirname(checkPath);
   }
 
-  const defaultPath = '/opt/magic_mirror/modules';
+  const defaultPath = "/opt/magic_mirror/modules";
   if (existsSync(defaultPath)) {
     return defaultPath;
   }
 
-  throw new Error('Could not find MagicMirror modules directory. Please run this script from within a MagicMirror installation.');
+  throw new Error(
+    "Could not find MagicMirror modules directory. Please run this script from within a MagicMirror installation."
+  );
 }
 
 /**
@@ -148,25 +158,39 @@ function findModulesDirectory(overridePath = null) {
  */
 function normalizePackage(pkg, moduleName) {
   const out = {};
-  out.name = pkg && typeof pkg.name === 'string' ? pkg.name : moduleName;
-  out.version = pkg && typeof pkg.version === 'string' ? pkg.version : '0.0.0';
-  out.description = pkg && typeof pkg.description === 'string' ? pkg.description : `MagicMirror module: ${moduleName}`;
-  out.license = pkg && typeof pkg.license === 'string' ? pkg.license : 'none';
-  out.keywords = Array.isArray(pkg && pkg.keywords) ? pkg.keywords.filter((k) => typeof k === 'string' && k.length > 0) : [];
-  if (out.keywords.length === 0) out.keywords = ['Other'];
+  out.name = pkg && typeof pkg.name === "string" ? pkg.name : moduleName;
+  out.version = pkg && typeof pkg.version === "string" ? pkg.version : "0.0.0";
+  out.description =
+    pkg && typeof pkg.description === "string"
+      ? pkg.description
+      : `MagicMirror module: ${moduleName}`;
+  out.license = pkg && typeof pkg.license === "string" ? pkg.license : "none";
+  out.keywords = Array.isArray(pkg && pkg.keywords)
+    ? pkg.keywords.filter((k) => typeof k === "string" && k.length > 0)
+    : [];
+  if (out.keywords.length === 0) out.keywords = ["Other"];
 
-  let repo = '';
+  let repo = "";
   try {
-    repo = (pkg && pkg.repository && pkg.repository.url) || pkg.repository || '';
-    if (typeof repo !== 'string') repo = '';
-    repo = repo.replace(/^git\+/, '').replace(/\.git$/, '');
+    const repoRaw =
+      (pkg && pkg.repository && pkg.repository.url) || pkg.repository || "";
+    if (typeof repoRaw === "string") {
+      repo = repoRaw.replace(/^git\+/, "").replace(/\.git$/, "");
+    }
   } catch {
-    repo = '';
+    repo = "";
   }
   out.repositoryUrl = repo;
-  out.dependencies = pkg && typeof pkg.dependencies === 'object' && pkg.dependencies ? pkg.dependencies : {};
-  out.devDependencies = pkg && typeof pkg.devDependencies === 'object' && pkg.devDependencies ? pkg.devDependencies : {};
-  out.scripts = pkg && typeof pkg.scripts === 'object' && pkg.scripts ? pkg.scripts : {};
+  out.dependencies =
+    pkg && typeof pkg.dependencies === "object" && pkg.dependencies
+      ? pkg.dependencies
+      : {};
+  out.devDependencies =
+    pkg && typeof pkg.devDependencies === "object" && pkg.devDependencies
+      ? pkg.devDependencies
+      : {};
+  out.scripts =
+    pkg && typeof pkg.scripts === "object" && pkg.scripts ? pkg.scripts : {};
   return out;
 }
 
@@ -175,51 +199,61 @@ function normalizePackage(pkg, moduleName) {
 // ============================================================================
 
 function printHelp() {
-  console.log('\nUsage: node magicmirror-check.mjs [options]');
-  console.log('\nOptions:');
-  console.log('  --current                 Check the current module (auto-detected)');
-  console.log('  --module=NAME             Check a specific module by name');
-  console.log('  --modules=NAME1,NAME2     Check multiple specific modules');
-  console.log('  --modules-root=PATH       Override modules root directory');
-  console.log('  --checker-repo=PATH       Override temporary checker repo location');
-  console.log('  --output-dir=PATH         Write magicmirror-check-results.md to this directory (use "." for CWD)');
-  console.log('  --cleanup                 Remove temporary checker files after run');
-  console.log('  --help                    Show this help message');
-  console.log('\nExamples:');
-  console.log('  node magicmirror-check.mjs --current --output-dir=.');
-  console.log('  node magicmirror-check.mjs --modules-root=/opt/magic_mirror/modules');
-  console.log('');
+  console.log("\nUsage: node magicmirror-check.mjs [options]");
+  console.log("\nOptions:");
+  console.log(
+    "  --current                 Check the current module (auto-detected)"
+  );
+  console.log("  --module=NAME             Check a specific module by name");
+  console.log("  --modules=NAME1,NAME2     Check multiple specific modules");
+  console.log("  --modules-root=PATH       Override modules root directory");
+  console.log(
+    "  --checker-repo=PATH       Override temporary checker repo location"
+  );
+  console.log(
+    '  --output-dir=PATH         Write magicmirror-check-results.md to this directory (use "." for CWD)'
+  );
+  console.log(
+    "  --cleanup                 Remove temporary checker files after run"
+  );
+  console.log("  --help                    Show this help message");
+  console.log("\nExamples:");
+  console.log("  node magicmirror-check.mjs --current --output-dir=.");
+  console.log(
+    "  node magicmirror-check.mjs --modules-root=/opt/magic_mirror/modules"
+  );
+  console.log("");
 }
 
 function parseCliArguments() {
   const args = process.argv.slice(2);
   const config = {
-    filterMode: 'all',
+    filterMode: "all",
     specificModules: [],
     cliModulesRoot: null,
     cliCheckerRepo: null,
-    cliOutputDir: null,
+    cliOutputDir: null
   };
 
   for (const arg of args) {
-    if (arg === '--current') {
-      config.filterMode = 'current';
-    } else if (arg.startsWith('--module=')) {
-      config.filterMode = 'specific';
+    if (arg === "--current") {
+      config.filterMode = "current";
+    } else if (arg.startsWith("--module=")) {
+      config.filterMode = "specific";
       config.specificModules.push(arg.substring(9));
-    } else if (arg.startsWith('--modules=')) {
-      config.filterMode = 'specific';
-      config.specificModules.push(...arg.substring(10).split(','));
-    } else if (arg.startsWith('--modules-root=')) {
-      config.cliModulesRoot = arg.substring('--modules-root='.length);
-    } else if (arg.startsWith('--checker-repo=')) {
-      config.cliCheckerRepo = arg.substring('--checker-repo='.length);
-    } else if (arg.startsWith('--output-dir=')) {
-      config.cliOutputDir = arg.substring('--output-dir='.length);
-    } else if (arg === '--help') {
+    } else if (arg.startsWith("--modules=")) {
+      config.filterMode = "specific";
+      config.specificModules.push(...arg.substring(10).split(","));
+    } else if (arg.startsWith("--modules-root=")) {
+      config.cliModulesRoot = arg.substring("--modules-root=".length);
+    } else if (arg.startsWith("--checker-repo=")) {
+      config.cliCheckerRepo = arg.substring("--checker-repo=".length);
+    } else if (arg.startsWith("--output-dir=")) {
+      config.cliOutputDir = arg.substring("--output-dir=".length);
+    } else if (arg === "--help") {
       printHelp();
       process.exit(0);
-    } else if (arg !== '--cleanup') {
+    } else if (arg !== "--cleanup") {
       console.log(`Unknown argument: ${arg}`);
       printHelp();
       process.exit(1);
@@ -235,23 +269,33 @@ function parseCliArguments() {
 
 async function ensureCheckerRepository(checkerRepo) {
   if (!existsSync(checkerRepo)) {
-    console.log('Fetching checker repository (git-free) via `degit` (first time only)...');
+    console.log(
+      "Fetching checker repository (git-free) via `degit` (first time only)..."
+    );
     try {
-      await execAsync(`npx degit MagicMirrorOrg/MagicMirror-3rd-Party-Modules#main "${checkerRepo}"`);
+      await execAsync(
+        `npx degit MagicMirrorOrg/MagicMirror-3rd-Party-Modules#main "${checkerRepo}"`
+      );
     } catch (err) {
-      console.log('`degit` failed or not available, falling back to git clone and stripping .git:', err?.message || err);
+      console.log(
+        "`degit` failed or not available, falling back to git clone and stripping .git:",
+        err?.message || err
+      );
       await execAsync(`git clone --depth 1 ${UPSTREAM_REPO} "${checkerRepo}"`);
       try {
-        await fs.rm(path.join(checkerRepo, '.git'), { recursive: true, force: true });
+        await fs.rm(path.join(checkerRepo, ".git"), {
+          recursive: true,
+          force: true
+        });
       } catch {
         // Non-fatal
       }
     }
   }
 
-  if (!existsSync(path.join(checkerRepo, 'node_modules'))) {
-    console.log('📦 Installing dependencies...');
-    await execAsync('npm install', { cwd: checkerRepo });
+  if (!existsSync(path.join(checkerRepo, "node_modules"))) {
+    console.log("📦 Installing dependencies...");
+    await execAsync("npm install", { cwd: checkerRepo });
   }
 }
 
@@ -264,27 +308,33 @@ async function scanModules(modulesRoot, filterMode, specificModules) {
 
     const moduleName = dirent.name;
     const modulePath = path.join(modulesRoot, moduleName);
-    const packageJsonPath = path.join(modulePath, 'package.json');
+    const packageJsonPath = path.join(modulePath, "package.json");
 
-    if (moduleName === 'default' || !existsSync(packageJsonPath)) {
+    if (moduleName === "default" || !existsSync(packageJsonPath)) {
       continue;
     }
 
-    if ((filterMode === 'specific' || filterMode === 'current') && specificModules.length > 0 && !specificModules.includes(moduleName)) {
+    if (
+      (filterMode === "specific" || filterMode === "current") &&
+      specificModules.length > 0 &&
+      !specificModules.includes(moduleName)
+    ) {
       continue;
     }
 
     try {
-      const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-      const repoUrl = pkg.repository?.url?.replace(/^git\+/, '').replace(/\.git$/, '') || '';
-      const maintainer = repoUrl.match(/github\.com\/([^/]+)\//)?.[1] || 'unknown';
+      const pkg = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+      const repoUrl =
+        pkg.repository?.url?.replace(/^git\+/, "").replace(/\.git$/, "") || "";
+      const maintainer =
+        repoUrl.match(/github\.com\/([^/]+)\//)?.[1] || "unknown";
 
       validModules.push({
         name: moduleName,
         path: modulePath,
         pkg: pkg,
         maintainer: maintainer,
-        repoUrl: repoUrl,
+        repoUrl: repoUrl
       });
     } catch {
       console.log(`⚠️  Skipping ${moduleName}: Invalid package.json`);
@@ -295,17 +345,17 @@ async function scanModules(modulesRoot, filterMode, specificModules) {
 }
 
 async function prepareCheckerFiles(checkerRepo, validModules) {
-  const checkerModulesDir = path.join(checkerRepo, 'modules');
+  const checkerModulesDir = path.join(checkerRepo, "modules");
   await fs.mkdir(checkerModulesDir, { recursive: true });
 
-  const websiteDataDir = path.join(checkerRepo, 'website', 'data');
-  const websiteDir = path.join(checkerRepo, 'website');
+  const websiteDataDir = path.join(checkerRepo, "website", "data");
+  const websiteDir = path.join(checkerRepo, "website");
 
   const filesToClean = [
-    path.join(websiteDataDir, 'modules.stage.4.json'),
-    path.join(websiteDataDir, 'modules.json'),
-    path.join(websiteDataDir, 'moduleCache.json'),
-    path.join(websiteDir, 'result.md'),
+    path.join(websiteDataDir, "modules.stage.4.json"),
+    path.join(websiteDataDir, "modules.json"),
+    path.join(websiteDataDir, "moduleCache.json"),
+    path.join(websiteDir, "result.md")
   ];
 
   for (const file of filesToClean) {
@@ -315,15 +365,18 @@ async function prepareCheckerFiles(checkerRepo, validModules) {
   }
 
   if (validModules.length === 1) {
-    console.log('\n📋 Preparing module for analysis...');
+    console.log("\n📋 Preparing module for analysis...");
   } else {
-    console.log('\n📋 Copying modules...');
+    console.log("\n📋 Copying modules...");
   }
 
   const moduleDataArray = [];
 
   for (const mod of validModules) {
-    const moduleCopyPath = path.join(checkerModulesDir, `${mod.name}-----${mod.maintainer}`);
+    const moduleCopyPath = path.join(
+      checkerModulesDir,
+      `${mod.name}-----${mod.maintainer}`
+    );
 
     if (existsSync(moduleCopyPath)) {
       await fs.rm(moduleCopyPath, { recursive: true });
@@ -338,14 +391,14 @@ async function prepareCheckerFiles(checkerRepo, validModules) {
       filter: (src) => {
         const relativePath = path.relative(mod.path, src);
         return (
-          !relativePath.startsWith('node_modules') &&
-          relativePath !== '.git' &&
-          !relativePath.startsWith('.git/') &&
-          !relativePath.startsWith('.mm-module-checker') &&
-          relativePath !== 'magicmirror-check-results.md' &&
-          !relativePath.includes('magicmirror-check.mjs')
+          !relativePath.startsWith("node_modules") &&
+          relativePath !== ".git" &&
+          !relativePath.startsWith(".git/") &&
+          !relativePath.startsWith(".mm-module-checker") &&
+          relativePath !== "magicmirror-check-results.md" &&
+          !relativePath.includes("magicmirror-check.mjs")
         );
-      },
+      }
     });
 
     const npkg = normalizePackage(mod.pkg, mod.name);
@@ -353,16 +406,17 @@ async function prepareCheckerFiles(checkerRepo, validModules) {
     moduleDataArray.push({
       id: moduleId,
       name: mod.name,
-      category: npkg.keywords[0] || 'Other',
+      category: npkg.keywords[0] || "Other",
       maintainer: mod.maintainer,
       maintainerURL: `https://github.com/${mod.maintainer}`,
-      url: mod.repoUrl || npkg.repositoryUrl || `https://github.com/${moduleId}`,
+      url:
+        mod.repoUrl || npkg.repositoryUrl || `https://github.com/${moduleId}`,
       description: npkg.description,
       license: npkg.license,
       keywords: npkg.keywords,
       issues: [],
       packageJson: {
-        status: 'parsed',
+        status: "parsed",
         summary: {
           name: npkg.name,
           version: npkg.version,
@@ -371,14 +425,17 @@ async function prepareCheckerFiles(checkerRepo, validModules) {
           keywords: npkg.keywords,
           dependencies: npkg.dependencies,
           devDependencies: npkg.devDependencies,
-          scripts: npkg.scripts,
-        },
-      },
+          scripts: npkg.scripts
+        }
+      }
     });
   }
 
   await fs.mkdir(websiteDataDir, { recursive: true });
-  await fs.writeFile(path.join(websiteDataDir, 'modules.stage.4.json'), JSON.stringify({ modules: moduleDataArray }, null, 2));
+  await fs.writeFile(
+    path.join(websiteDataDir, "modules.stage.4.json"),
+    JSON.stringify({ modules: moduleDataArray }, null, 2)
+  );
 
   return { checkerModulesDir, websiteDataDir };
 }
@@ -387,8 +444,16 @@ async function prepareCheckerFiles(checkerRepo, validModules) {
 // Checker Execution Functions
 // ============================================================================
 
-async function runChecker(checkerRepo, checkerModulesDir, websiteDataDir, validModules) {
-  const checkText = validModules.length === 1 ? 'Running module check...' : `Running checks for ${validModules.length} modules...`;
+async function runChecker(
+  checkerRepo,
+  checkerModulesDir,
+  websiteDataDir,
+  validModules
+) {
+  const checkText =
+    validModules.length === 1
+      ? "Running module check..."
+      : `Running checks for ${validModules.length} modules...`;
   console.log(`\n🔎 ${checkText}`);
 
   await new Promise((resolve, reject) => {
@@ -396,26 +461,29 @@ async function runChecker(checkerRepo, checkerModulesDir, websiteDataDir, validM
       ...process.env,
       CHECK_MODULES_PROJECT_ROOT: checkerRepo,
       CHECK_MODULES_MODULES_DIR: checkerModulesDir,
-      CHECK_MODULES_STAGE4_PATH: path.join(websiteDataDir, 'modules.stage.4.json'),
-      NODE_OPTIONS: '--no-warnings',
+      CHECK_MODULES_STAGE4_PATH: path.join(
+        websiteDataDir,
+        "modules.stage.4.json"
+      ),
+      NODE_OPTIONS: "--no-warnings"
     };
 
-    const cp = spawn('npx', ['tsx', 'scripts/check-modules/index.ts'], {
+    const cp = spawn("npx", ["tsx", "scripts/check-modules/index.ts"], {
       cwd: checkerRepo,
       env: childEnv,
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ["ignore", "pipe", "pipe"]
     });
 
-    const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
     let frameIndex = 0;
     let elapsed = 0;
     const tick = 200;
 
-    let stderr = '';
+    let stderr = "";
     let progressSeen = false;
     let progressCurrent = 0;
     let progressTotal = 0;
-    let detectedModule = '';
+    let detectedModule = "";
 
     const spinnerInterval = setInterval(() => {
       const frame = spinnerFrames[frameIndex++ % spinnerFrames.length];
@@ -444,7 +512,7 @@ async function runChecker(checkerRepo, checkerModulesDir, websiteDataDir, validM
       }
     };
 
-    cp.stdout.on('data', (chunk) => {
+    cp.stdout.on("data", (chunk) => {
       const text = chunk.toString();
       const m = text.match(/Progress:\s*(\d+)\/(\d+)/);
       if (m) {
@@ -456,33 +524,37 @@ async function runChecker(checkerRepo, checkerModulesDir, websiteDataDir, validM
         if (text.includes(vm.name)) {
           detectedModule = vm.name;
           if (!progressTotal) progressTotal = validModules.length;
-          progressCurrent = validModules.findIndex((v) => v.name === vm.name) + 1;
+          progressCurrent =
+            validModules.findIndex((v) => v.name === vm.name) + 1;
           break;
         }
       }
     });
 
-    cp.stderr.on('data', (chunk) => {
+    cp.stderr.on("data", (chunk) => {
       const text = chunk.toString();
       stderr += text;
       for (const vm of validModules) {
         if (text.includes(vm.name)) {
           detectedModule = vm.name;
           if (!progressTotal) progressTotal = validModules.length;
-          progressCurrent = validModules.findIndex((v) => v.name === vm.name) + 1;
+          progressCurrent =
+            validModules.findIndex((v) => v.name === vm.name) + 1;
           break;
         }
       }
     });
 
-    cp.on('close', (code) => {
+    cp.on("close", (code) => {
       clearInterval(spinnerInterval);
       flushSpinner();
       if (code === 0) {
         if (progressSeen) {
-          console.log(`Checking complete. Progress: ${progressCurrent}/${progressTotal}`);
+          console.log(
+            `Checking complete. Progress: ${progressCurrent}/${progressTotal}`
+          );
         } else {
-          console.log('Checking complete.');
+          console.log("Checking complete.");
         }
         resolve();
       } else {
@@ -499,10 +571,13 @@ async function runChecker(checkerRepo, checkerModulesDir, websiteDataDir, validM
 // ============================================================================
 
 async function parseCheckerResults(checkerRepo, validModules) {
-  const websiteDataDir = path.join(checkerRepo, 'website', 'data');
-  const modulesJsonPath = path.join(websiteDataDir, 'modules.json');
-  const modulesData = JSON.parse(await fs.readFile(modulesJsonPath, 'utf8'));
-  const resultMd = await fs.readFile(path.join(checkerRepo, 'website', 'result.md'), 'utf8');
+  const websiteDataDir = path.join(checkerRepo, "website", "data");
+  const modulesJsonPath = path.join(websiteDataDir, "modules.json");
+  const modulesData = JSON.parse(await fs.readFile(modulesJsonPath, "utf8"));
+  const resultMd = await fs.readFile(
+    path.join(checkerRepo, "website", "result.md"),
+    "utf8"
+  );
 
   const moduleSections = resultMd.split(/### \[/).slice(1);
   const issuesByModule = {};
@@ -512,19 +587,19 @@ async function parseCheckerResults(checkerRepo, validModules) {
     if (!moduleNameMatch) continue;
 
     const fullName = moduleNameMatch[1];
-    const moduleName = fullName.split(' by ')[0];
+    const moduleName = fullName.split(" by ")[0];
     const issueMatches = [];
-    const lines = section.split('\n');
-    let currentIssue = '';
+    const lines = section.split("\n");
+    let currentIssue = "";
 
     for (const line of lines) {
       if (line.match(/^\d+\./)) {
         if (currentIssue) issueMatches.push(currentIssue);
-        currentIssue = line.replace(/^\d+\.\s*/, '').trim();
-      } else if (line.trim().startsWith('-') && currentIssue) {
-        currentIssue += '\n' + line.trim();
+        currentIssue = line.replace(/^\d+\.\s*/, "").trim();
+      } else if (line.trim().startsWith("-") && currentIssue) {
+        currentIssue += "\n" + line.trim();
       } else if (line.trim() && currentIssue) {
-        currentIssue += ' ' + line.trim();
+        currentIssue += " " + line.trim();
       }
     }
     if (currentIssue) issueMatches.push(currentIssue);
@@ -535,7 +610,7 @@ async function parseCheckerResults(checkerRepo, validModules) {
     .filter((mod) => validModules.some((vm) => vm.name === mod.name))
     .map((mod) => ({
       name: mod.name,
-      issues: issuesByModule[mod.name] || [],
+      issues: issuesByModule[mod.name] || []
     }));
 
   return allResults;
@@ -543,11 +618,13 @@ async function parseCheckerResults(checkerRepo, validModules) {
 
 function displayResults(allResults) {
   const resultTitle =
-    allResults.length === 1 ? `Module Check Result: ${allResults[0].name}` : `Module Check Results: ${allResults.length} modules checked`;
+    allResults.length === 1
+      ? `Module Check Result: ${allResults[0].name}`
+      : `Module Check Results: ${allResults.length} modules checked`;
 
-  console.log('\n' + '='.repeat(80));
+  console.log("\n" + "=".repeat(80));
   console.log(resultTitle);
-  console.log('='.repeat(80));
+  console.log("=".repeat(80));
 
   let totalIssues = 0;
   const cleanModules = [];
@@ -563,7 +640,10 @@ function displayResults(allResults) {
   }
 
   if (cleanModules.length > 0) {
-    const passText = cleanModules.length === 1 ? '✅ Module passed all checks' : `✅ ${cleanModules.length} modules passed all checks`;
+    const passText =
+      cleanModules.length === 1
+        ? "✅ Module passed all checks"
+        : `✅ ${cleanModules.length} modules passed all checks`;
     console.log(`\n${passText}`);
     if (cleanModules.length > 1) {
       cleanModules.forEach((mod) => console.log(`  ✓ ${mod.name}`));
@@ -573,27 +653,39 @@ function displayResults(allResults) {
   if (modulesWithIssues.length > 0) {
     const issueText =
       allResults.length === 1
-        ? `⚠️  ${totalIssues} issue${totalIssues > 1 ? 's' : ''} found`
-        : `⚠️  ${modulesWithIssues.length} module${modulesWithIssues.length > 1 ? 's' : ''} with issues (${totalIssues} total)`;
+        ? `⚠️  ${totalIssues} issue${totalIssues > 1 ? "s" : ""} found`
+        : `⚠️  ${modulesWithIssues.length} module${modulesWithIssues.length > 1 ? "s" : ""} with issues (${totalIssues} total)`;
     console.log(`\n${issueText}:\n`);
 
     modulesWithIssues.forEach((mod) => {
       const urlMap = new Map();
       if (allResults.length > 1) {
-        console.log(`  📦 ${mod.name} (${mod.issues.length} issue${mod.issues.length > 1 ? 's' : ''})`);
+        console.log(
+          `  📦 ${mod.name} (${mod.issues.length} issue${mod.issues.length > 1 ? "s" : ""})`
+        );
       }
       mod.issues.forEach((issue, i) => {
-        const issueLines = issue.split('\n');
-        const baseIndent = allResults.length > 1 ? '     ' : '  ';
-        const subIndent = baseIndent + '   ';
+        const issueLines = issue.split("\n");
+        const baseIndent = allResults.length > 1 ? "     " : "  ";
+        const subIndent = baseIndent + "   ";
 
         const processedText = extractLinks(issueLines[0], urlMap);
-        const wrapped = smartWrap(`${i + 1}. ${processedText}`, null, baseIndent, '   ');
+        const wrapped = smartWrap(
+          `${i + 1}. ${processedText}`,
+          null,
+          baseIndent,
+          "   "
+        );
         console.log(wrapped);
 
         for (let j = 1; j < issueLines.length; j++) {
           const processedSubItem = extractLinks(issueLines[j], urlMap);
-          const wrappedSubItem = smartWrap(processedSubItem, null, subIndent, '  ');
+          const wrappedSubItem = smartWrap(
+            processedSubItem,
+            null,
+            subIndent,
+            "  "
+          );
           console.log(wrappedSubItem);
         }
       });
@@ -605,25 +697,34 @@ function displayResults(allResults) {
         }
       }
 
-      console.log('');
+      console.log("");
     });
   }
 
   return { cleanModules, modulesWithIssues, totalIssues };
 }
 
-function determineResultsDirectory(modulesRoot, cliOutputDir, filterMode, currentModuleName, specificModules, validModules) {
+function determineResultsDirectory(
+  modulesRoot,
+  cliOutputDir,
+  filterMode,
+  currentModuleName,
+  specificModules,
+  validModules
+) {
   let resultsDir = modulesRoot;
 
   if (cliOutputDir && cliOutputDir.length > 0) {
-    if (cliOutputDir === '.' || cliOutputDir.toLowerCase() === 'cwd') {
+    if (cliOutputDir === "." || cliOutputDir.toLowerCase() === "cwd") {
       resultsDir = process.cwd();
     } else {
-      resultsDir = path.isAbsolute(cliOutputDir) ? cliOutputDir : path.join(process.cwd(), cliOutputDir);
+      resultsDir = path.isAbsolute(cliOutputDir)
+        ? cliOutputDir
+        : path.join(process.cwd(), cliOutputDir);
     }
-  } else if (filterMode === 'current' && currentModuleName) {
+  } else if (filterMode === "current" && currentModuleName) {
     resultsDir = path.join(modulesRoot, currentModuleName);
-  } else if (filterMode === 'specific' && specificModules.length === 1) {
+  } else if (filterMode === "specific" && specificModules.length === 1) {
     const vm = validModules.find((v) => v.name === specificModules[0]);
     if (vm && vm.path) resultsDir = vm.path;
   }
@@ -631,10 +732,17 @@ function determineResultsDirectory(modulesRoot, cliOutputDir, filterMode, curren
   return resultsDir;
 }
 
-async function writeResultsFile(resultsDir, modulesRoot, allResults, cleanModules, modulesWithIssues, totalIssues) {
-  const resultsPath = path.join(resultsDir, 'magicmirror-check-results.md');
+async function writeResultsFile(
+  resultsDir,
+  modulesRoot,
+  allResults,
+  cleanModules,
+  modulesWithIssues,
+  totalIssues
+) {
+  const resultsPath = path.join(resultsDir, "magicmirror-check-results.md");
   let resultsContent = `# MagicMirror Module Check Results\n\n`;
-  resultsContent += `**Check Date:** ${new Date().toLocaleString('en-US')}\n`;
+  resultsContent += `**Check Date:** ${new Date().toLocaleString("en-US")}\n`;
   resultsContent += `**Modules Directory:** ${modulesRoot}\n`;
   resultsContent += `**Modules Checked:** ${allResults.length}\n\n`;
 
@@ -658,11 +766,11 @@ async function writeResultsFile(resultsDir, modulesRoot, allResults, cleanModule
       resultsContent += `### ${mod.name}\n`;
       resultsContent += `**Issues:** ${mod.issues.length}\n`;
       mod.issues.forEach((issue, i) => {
-        const lines = issue.split('\n');
+        const lines = issue.split("\n");
         const first = extractLinks(lines[0], urlMap);
         let outIssue = `${i + 1}. ${first}`;
         for (let j = 1; j < lines.length; j++) {
-          outIssue += '\n' + extractLinks(lines[j], urlMap);
+          outIssue += "\n" + extractLinks(lines[j], urlMap);
         }
         resultsContent += `${outIssue}\n`;
       });
@@ -694,12 +802,14 @@ async function main() {
     const cliConfig = parseCliArguments();
 
     let modulesRoot = null;
-    let checkerRepo = path.join('/tmp', 'mm-module-checker-all');
+    let checkerRepo = path.join("/tmp", "mm-module-checker-all");
 
     try {
       modulesRoot = findModulesDirectory(cliConfig.cliModulesRoot);
     } catch {
-      console.warn('Warning: could not auto-detect modules directory, falling back to CLI or default.');
+      console.warn(
+        "Warning: could not auto-detect modules directory, falling back to CLI or default."
+      );
       if (cliConfig.cliModulesRoot && existsSync(cliConfig.cliModulesRoot)) {
         modulesRoot = cliConfig.cliModulesRoot;
       } else {
@@ -712,47 +822,67 @@ async function main() {
     }
 
     let currentModuleName = null;
-    if (cliConfig.filterMode === 'current') {
+    if (cliConfig.filterMode === "current") {
       const scriptDir = path.dirname(fileURLToPath(import.meta.url));
       let checkPath = scriptDir;
 
       for (let i = 0; i < 5; i++) {
-        const testPath = path.resolve(checkPath, '../'.repeat(i));
+        const testPath = path.resolve(checkPath, "../".repeat(i));
         const parentPath = path.dirname(testPath);
 
-        if (parentPath === modulesRoot && existsSync(path.join(testPath, 'package.json'))) {
+        if (
+          parentPath === modulesRoot &&
+          existsSync(path.join(testPath, "package.json"))
+        ) {
           currentModuleName = path.basename(testPath);
           break;
         }
       }
 
       if (!currentModuleName) {
-        console.error('❌ Error: Could not determine current module. Please use --module=NAME instead.');
+        console.error(
+          "❌ Error: Could not determine current module. Please use --module=NAME instead."
+        );
         process.exit(1);
       }
 
       cliConfig.specificModules = [currentModuleName];
-      cliConfig.filterMode = 'specific';
+      cliConfig.filterMode = "specific";
       console.log(`🔍 Checking current module: ${currentModuleName}`);
-    } else if (cliConfig.filterMode === 'specific') {
-      console.log(`🔍 Checking specific module(s): ${cliConfig.specificModules.join(', ')}`);
+    } else if (cliConfig.filterMode === "specific") {
+      console.log(
+        `🔍 Checking specific module(s): ${cliConfig.specificModules.join(", ")}`
+      );
     } else {
-      const displayRoot = cliConfig.cliModulesRoot || '/opt/magic_mirror/modules';
-      console.log(`🔍 Setting up MagicMirror checker for all modules in: ${displayRoot}`);
+      const displayRoot =
+        cliConfig.cliModulesRoot || "/opt/magic_mirror/modules";
+      console.log(
+        `🔍 Setting up MagicMirror checker for all modules in: ${displayRoot}`
+      );
     }
 
     await ensureCheckerRepository(checkerRepo);
 
-    const validModules = await scanModules(modulesRoot, cliConfig.filterMode, cliConfig.specificModules);
+    const validModules = await scanModules(
+      modulesRoot,
+      cliConfig.filterMode,
+      cliConfig.specificModules
+    );
 
     if (validModules.length === 0) {
-      console.error('❌ Error: No valid modules found to check.');
-      if (cliConfig.filterMode === 'specific') {
-        console.error(`   Requested module(s): ${cliConfig.specificModules.join(', ')}`);
+      console.error("❌ Error: No valid modules found to check.");
+      if (cliConfig.filterMode === "specific") {
+        console.error(
+          `   Requested module(s): ${cliConfig.specificModules.join(", ")}`
+        );
         console.error(`   Available modules in ${modulesRoot}:`);
         const allDirs = await fs.readdir(modulesRoot, { withFileTypes: true });
         for (const dirent of allDirs) {
-          if (dirent.isDirectory() && dirent.name !== 'default' && existsSync(path.join(modulesRoot, dirent.name, 'package.json'))) {
+          if (
+            dirent.isDirectory() &&
+            dirent.name !== "default" &&
+            existsSync(path.join(modulesRoot, dirent.name, "package.json"))
+          ) {
             console.error(`     - ${dirent.name}`);
           }
         }
@@ -760,17 +890,28 @@ async function main() {
       process.exit(1);
     }
 
-    console.log(`\n📦 Found ${validModules.length} module${validModules.length > 1 ? 's' : ''} to check:`);
+    console.log(
+      `\n📦 Found ${validModules.length} module${validModules.length > 1 ? "s" : ""} to check:`
+    );
     validModules.forEach((mod, idx) => {
       console.log(`  ${idx + 1}. ${mod.name} (${mod.maintainer})`);
     });
 
-    const { checkerModulesDir, websiteDataDir } = await prepareCheckerFiles(checkerRepo, validModules);
+    const { checkerModulesDir, websiteDataDir } = await prepareCheckerFiles(
+      checkerRepo,
+      validModules
+    );
 
-    await runChecker(checkerRepo, checkerModulesDir, websiteDataDir, validModules);
+    await runChecker(
+      checkerRepo,
+      checkerModulesDir,
+      websiteDataDir,
+      validModules
+    );
 
     const allResults = await parseCheckerResults(checkerRepo, validModules);
-    const { cleanModules, modulesWithIssues, totalIssues } = displayResults(allResults);
+    const { cleanModules, modulesWithIssues, totalIssues } =
+      displayResults(allResults);
 
     const resultsDir = determineResultsDirectory(
       modulesRoot,
@@ -781,22 +922,33 @@ async function main() {
       validModules
     );
 
-    const resultsPath = await writeResultsFile(resultsDir, modulesRoot, allResults, cleanModules, modulesWithIssues, totalIssues);
+    const resultsPath = await writeResultsFile(
+      resultsDir,
+      modulesRoot,
+      allResults,
+      cleanModules,
+      modulesWithIssues,
+      totalIssues
+    );
 
-    console.log('='.repeat(80));
+    console.log("=".repeat(80));
     console.log(`📄 Results saved to: ${resultsPath}`);
-    console.log('Compare with: https://modules.magicmirror.builders/result.html');
-    console.log('='.repeat(80) + '\n');
+    console.log(
+      "Compare with: https://modules.magicmirror.builders/result.html"
+    );
+    console.log("=".repeat(80) + "\n");
 
-    if (process.argv.includes('--cleanup')) {
-      console.log('🧹 Cleaning up checker files...');
+    if (process.argv.includes("--cleanup")) {
+      console.log("🧹 Cleaning up checker files...");
       await fs.rm(checkerRepo, { recursive: true, force: true });
-      console.log('✅ Cleanup complete\n');
+      console.log("✅ Cleanup complete\n");
     } else {
-      console.log('💡 Tip: Use --cleanup to remove checker files after check\n');
+      console.log(
+        "💡 Tip: Use --cleanup to remove checker files after check\n"
+      );
     }
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error("❌ Error:", error.message);
     if (error.stderr) console.error(error.stderr);
     process.exit(1);
   }
