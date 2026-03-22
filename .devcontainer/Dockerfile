@@ -1,5 +1,5 @@
 # Module-local Dockerfile copied from repo root (minimal adaptation)
-FROM node:22-bookworm-slim
+FROM mcr.microsoft.com/devcontainers/javascript-node:24
 
 WORKDIR /opt/magic_mirror
 
