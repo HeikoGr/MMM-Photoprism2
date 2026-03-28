@@ -17,11 +17,12 @@
     "vscode": {
       "extensions": ["actboy168.tasks", "dbaeumer.vscode-eslint"],
       "settings": {
+        "chat.mcp.autoStart": true,
         "editor.formatOnSave": true,
         "files.trimTrailingWhitespace": true
       }
     }
   },
   "postCreateCommand": "/bin/sh .devcontainer/postCreate.sh",
-  "postStartCommand": "echo 'Devcontainer started. MagicMirror at http://localhost:8080'"
+  "postStartCommand": "echo 'Devcontainer started. MagicMirror at http://localhost:8080'; echo 'Playwright MCP is configured in .vscode/mcp.json'"
 }

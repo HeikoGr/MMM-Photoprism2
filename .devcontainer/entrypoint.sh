@@ -87,7 +87,7 @@ if [ -d "${MODULES_DIR}" ]; then
     if [ -f "$MOD/package.json" ]; then
       if [ ! -d "$MOD/node_modules" ] || [ -z "$(ls -A "$MOD/node_modules" 2>/dev/null)" ]; then
         echo "${YELLOW}Installing dependencies: $(basename "$MOD")${NC}"
-        npm --prefix "$MOD" install --omit=dev || true
+        npm --prefix "$MOD" install --omit=dev --no-audit --no-fund || true
       fi
     fi
   done
