@@ -107,6 +107,10 @@ When enabled, logs may show:
 - Download status
 - Any errors that occur
 
+## Documentation
+
+Additional development and devcontainer documentation is collected in [docs/README.md](docs/README.md).
+
 ## Code Quality
 
 This module includes an ESLint configuration (`.eslintrc.json`) that was automatically generated to match common MagicMirror module standards. The configuration is provided as-is without any specific expertise in ESLint. It's included to help maintain code quality and consistency, but may need adjustments based on your specific needs or preferences.

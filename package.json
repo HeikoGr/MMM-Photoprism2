@@ -14,7 +14,7 @@
     "test": "node --run lint",
     "test:spelling": "cspell .",
     "check": "node check.js ../../config/config.js || true",
-    "mmcheck": "node scripts/magicmirror-check.mjs --current || true"
+    "mmcheck": "node scripts/magicmirror-check.mjs --devcontainer-only --current || true"
   },
   "keywords": [
     "MagicMirror²",
