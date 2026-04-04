@@ -4,7 +4,7 @@ This devcontainer provides a MagicMirror module development environment for MMM-
 
 ## Base Image
 
-- Shared base image: `ghcr.io/heikogr/mmm-devcontainer-base:node24-trixie-slim`
+- Shared base image: `ghcr.io/heikogr/mmm-devcontainer:node24-trixie-slim`
 - Node.js 24
 - MagicMirror² preinstalled at `/opt/magic_mirror`
 - Playwright, `playwright-mcp`, Chrome, `MMM-Cursor`, `MMM-Carousel`, and `MMM-KeyBindings` are already included in the shared image
