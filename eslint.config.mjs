@@ -5,7 +5,7 @@ import pluginN from "eslint-plugin-n";
 
 export default defineConfig([
   {
-    ignores: ["**/node_modules/**", "img/**"]
+    ignores: ["**/node_modules/**", "img/**"],
   },
   js.configs.recommended,
   {
@@ -15,21 +15,21 @@ export default defineConfig([
       ecmaVersion: 2021,
       sourceType: "commonjs",
       globals: {
-        ...globals.node
-      }
+        ...globals.node,
+      },
     },
     plugins: {
-      n: pluginN
+      n: pluginN,
     },
     rules: {
       ...pluginN.configs.recommended.rules,
       "n/no-unsupported-features/node-builtins": [
         "error",
         {
-          ignores: ["fetch"]
-        }
-      ]
-    }
+          ignores: ["fetch"],
+        },
+      ],
+    },
   },
   {
     files: ["MMM-Photoprism2.js"],
@@ -40,17 +40,17 @@ export default defineConfig([
         ...globals.browser,
         Log: "readonly",
         Module: "readonly",
-        config: "readonly"
-      }
+        config: "readonly",
+      },
     },
     rules: {
       "no-console": [
         "warn",
         {
-          allow: ["warn", "error"]
-        }
-      ]
-    }
+          allow: ["warn", "error"],
+        },
+      ],
+    },
   },
   {
     files: ["**/*.mjs"],
@@ -58,9 +58,9 @@ export default defineConfig([
       ecmaVersion: "latest",
       sourceType: "module",
       globals: {
-        ...globals.node
-      }
-    }
+        ...globals.node,
+      },
+    },
   },
   {
     files: ["tests/**/*.js"],
@@ -69,8 +69,8 @@ export default defineConfig([
       sourceType: "commonjs",
       globals: {
         ...globals.node,
-        ...globals.mocha
-      }
-    }
-  }
+        ...globals.mocha,
+      },
+    },
+  },
 ]);

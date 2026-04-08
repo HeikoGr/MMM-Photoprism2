@@ -1,4 +1,12 @@
 /* eslint-disable no-console */
+function createInstanceId(prefix = "photoprism") {
+  if (globalThis.MMModuleRuntimeUtils?.generateScopedId) {
+    return globalThis.MMModuleRuntimeUtils.generateScopedId(prefix);
+  }
+
+  return `${prefix}_${Date.now().toString(36)}`;
+}
+
 Module.register("MMM-Photoprism2", {
   updateTimer: null,
   defaults: {
@@ -19,7 +27,11 @@ Module.register("MMM-Photoprism2", {
     preloadInBrowser: true,
     // How verbose logging should be in the browser console.
     // One of: "error", "warn", "info", "debug". Default is "info".
-    logLevel: "info"
+    logLevel: "info",
+  },
+
+  getScripts() {
+    return ["lib/runtime-utils.js"];
   },
 
   getStyles() {
@@ -28,6 +40,7 @@ Module.register("MMM-Photoprism2", {
 
   start() {
     this.log("info", "Starting module");
+    this.instanceId = createInstanceId();
     this.currentImage = null;
     this.loaded = false;
     this.error = null;
@@ -49,25 +62,111 @@ Module.register("MMM-Photoprism2", {
     }
   },
 
+  notificationReceived(notification) {
+    if (notification === "DOM_OBJECTS_CREATED") {
+      this.log("info", "DOM objects created, starting update interval");
+      this.clearUpdateTimer();
+      this.startUpdateTimer();
+    }
+  },
+
+  async socketNotificationReceived(notification, payload) {
+    if (payload?.instanceId && payload.instanceId !== this.instanceId) {
+      return;
+    }
+
+    this.log("debug", `Received socket notification: ${notification}`);
+    if (notification === "IMAGE_READY") {
+      this.log("info", "New image ready:", payload);
+
+      try {
+        await this.preloadImage(payload.path);
+      } catch (e) {
+        this.log("warn", "Error during preload:", e);
+      }
+
+      this.currentImage = payload;
+      this.loaded = true;
+      this.error = null;
+      this.updateDom(this.config.fadeSpeed);
+    } else if (notification === "ERROR") {
+      this.log("error", "Error received:", payload);
+      this.error = payload?.message || payload || "Unknown error";
+      this.loaded = true;
+      this.updateDom();
+    }
+  },
+
+  suspend() {
+    this.log("info", "Module suspended");
+
+    this.isSuspended = true;
+    this.error = null;
+    this.clearUpdateTimer();
+  },
+
+  resume() {
+    this.log("info", "Module resumed");
+
+    const cfg = this.getEffectiveConfig();
+    this.sendSocketNotification("CONFIG", cfg);
+    this.startUpdateTimer();
+    this.isSuspended = false;
+  },
+
+  startUpdateTimer() {
+    if (this.updateTimer) {
+      return;
+    }
+
+    this.updateTimer = setInterval(() => {
+      this.log("debug", "Interval triggered, requesting new image");
+      this.error = null;
+      const cfg = this.getEffectiveConfig();
+      this.sendSocketNotification("CONFIG", cfg);
+    }, this.config.updateInterval);
+  },
+
+  clearUpdateTimer() {
+    if (!this.updateTimer) {
+      return;
+    }
+
+    clearInterval(this.updateTimer);
+    this.updateTimer = null;
+  },
+
   // Simple log helper to control verbosity from the module config
   log(level, ...args) {
-    const levels = { error: 0, warn: 1, info: 2, debug: 3 };
-    const configured =
-      (this.config && this.config.logLevel) || this.defaults.logLevel || "info";
-    const configuredLevel =
-      levels[configured] !== undefined ? configured : "info";
-    const msgLevel = levels[level] !== undefined ? level : "info";
-    if (levels[msgLevel] <= levels[configuredLevel]) {
+    if (
+      !this.moduleLogger &&
+      globalThis.MMModuleRuntimeUtils?.createLevelLogger
+    ) {
+      this.moduleLogger = globalThis.MMModuleRuntimeUtils.createLevelLogger({
+        prefix: "[MMM-Photoprism2]",
+        getLevel: () =>
+          (this.config && this.config.logLevel) ||
+          this.defaults.logLevel ||
+          "info",
+      });
+    }
+
+    if (this.moduleLogger) {
       try {
-        if (msgLevel === "error") console.error("[MMM-Photoprism2]", ...args);
-        else if (msgLevel === "warn")
-          console.warn("[MMM-Photoprism2]", ...args);
-        else if (msgLevel === "info")
-          console.info("[MMM-Photoprism2]", ...args);
-        else console.debug("[MMM-Photoprism2]", ...args);
+        this.moduleLogger.log(level, ...args);
       } catch {
         // ignore any console errors
       }
+      return;
+    }
+
+    try {
+      if (level === "error") console.error("[MMM-Photoprism2]", ...args);
+      else if (level === "warn") console.warn("[MMM-Photoprism2]", ...args);
+      else if (level === "debug") console.debug("[MMM-Photoprism2]", ...args);
+      else console.info("[MMM-Photoprism2]", ...args);
+    } catch {
+      // ignore any console errors
     }
   },
 
@@ -122,7 +221,10 @@ Module.register("MMM-Photoprism2", {
   // display resolution and avoids downloading unnecessarily large thumbnails.
   getEffectiveConfig() {
     if (!this.config) return null;
-    const cfg = Object.assign({}, this.config);
+    const cfg = {
+      ...this.config,
+      instanceId: this.instanceId,
+    };
 
     if (cfg.useThumbnails) {
       let size = cfg.thumbnailSize;
@@ -135,7 +237,7 @@ Module.register("MMM-Photoprism2", {
           // Photoprism standard sizes (increasing). We'll pick the smallest fit_ value
           // that is >= maxPx, otherwise the largest available.
           const available = [
-            720, 1280, 1600, 1920, 2048, 2560, 3840, 4096, 5120, 7680
+            720, 1280, 1600, 1920, 2048, 2560, 3840, 4096, 5120, 7680,
           ];
           const chosen =
             available.find((s) => s >= Math.ceil(maxPx)) ||
@@ -166,7 +268,7 @@ Module.register("MMM-Photoprism2", {
     if (!this.loaded) {
       this.log(
         "debug",
-        "Module not loaded yet or suspended, showing loading message"
+        "Module not loaded yet or suspended, showing loading message",
       );
       wrapper.innerHTML = "Loading...";
       return wrapper;
@@ -207,76 +309,4 @@ Module.register("MMM-Photoprism2", {
 
     return wrapper;
   },
-
-  async socketNotificationReceived(notification, payload) {
-    this.log("debug", `Received socket notification: ${notification}`);
-    if (notification === "IMAGE_READY") {
-      this.log("info", "New image ready:", payload);
-
-      // Preload in browser first (if enabled) so displayed image is already cached
-      try {
-        await this.preloadImage(payload.path);
-      } catch (e) {
-        this.log("warn", "Error during preload:", e);
-      }
-
-      this.currentImage = payload;
-      this.loaded = true;
-      this.error = null;
-      this.updateDom(this.config.fadeSpeed);
-    } else if (notification === "ERROR") {
-      this.log("error", "Error received:", payload);
-      this.error = payload;
-      this.loaded = true;
-      this.updateDom();
-    }
-  },
-
-  notificationReceived(notification) {
-    // Only process notifications we care about
-    if (notification === "DOM_OBJECTS_CREATED") {
-      this.log("info", "DOM objects created, starting update interval");
-      // Start the update interval
-      if (this.updateTimer) {
-        clearInterval(this.updateTimer);
-      }
-      this.updateTimer = setInterval(() => {
-        this.log("debug", "Interval triggered, requesting new image");
-        this.error = null;
-        const cfg = this.getEffectiveConfig();
-        this.sendSocketNotification("CONFIG", cfg);
-      }, this.config.updateInterval);
-    }
-  },
-
-  suspend() {
-    this.log("info", "Module suspended");
-
-    // Keep the currentImage and preload element so the browser keeps the image cached.
-    this.isSuspended = true;
-    this.error = null;
-
-    if (this.updateTimer) {
-      clearInterval(this.updateTimer);
-      this.updateTimer = null;
-    }
-  },
-
-  resume() {
-    this.log("info", "Module resumed");
-
-    const cfg = this.getEffectiveConfig();
-    this.sendSocketNotification("CONFIG", cfg);
-
-    // Intervall neu starten
-    if (!this.updateTimer) {
-      this.updateTimer = setInterval(() => {
-        this.log("debug", "Interval triggered, requesting new image");
-        this.error = null;
-        const cfg = this.getEffectiveConfig();
-        this.sendSocketNotification("CONFIG", cfg);
-      }, this.config.updateInterval);
-    }
-    this.isSuspended = false;
-  }
 });

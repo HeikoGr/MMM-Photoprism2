@@ -12,12 +12,12 @@ let config = {
     {
       module: "MMM-Cursor",
       config: {
-        timeout: 1500
-      }
+        timeout: 1500,
+      },
     },
     { module: "clock", position: "top_left" },
-    { module: "MMM-Photoprism2", position: "top_right", config: {} }
-  ]
+    { module: "MMM-Photoprism2", position: "top_right", config: {} },
+  ],
 };
 
 if (typeof module !== "undefined") {

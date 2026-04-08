@@ -8,14 +8,22 @@ Please keep in mind this is mostly vibe-coded. I was happy to have a working exa
 
 > **Note:** This project is based on the original [MMM-Photoprism](https://github.com/Brtrnd/MMM-Photoprism) by Brtrnd. Thank you for the great foundation!
 
+## Requirements
+
+- Node.js `>=20.18.1`
+- A reachable PhotoPrism instance
+- A PhotoPrism API key with access to the target album
+
 ## Features
 
 - Displays random photos from a specified PhotoPrism album
 - Automatic updates every 5 minutes
 - Smooth fade transitions between photos
 - Displays photo titles (if available)
-- Caches images locally for better performance
+- Uses browser-side preloading to keep image switches smooth
 - Detailed logging for troubleshooting
+- Instance-aware backend/frontend communication for multiple module instances
+- `suspend()` / `resume()` support to stop timers while the module is hidden
 
 ## Installation
 
@@ -75,7 +83,18 @@ Add the following configuration block to your MagicMirror config.js file:
 | `preloadInBrowser` | Preload images into the browser cache (hidden `<img>`) so switching is instant and works while module is suspended | `true` |
 | `logLevel` | Browser console verbosity. One of `error`, `warn`, `info`, `debug` (less → more). Use `error` to quiet the console. | `info` |
 
-You can also set the retentiondays in the MMM-Photoprism2.js file. By default it removes all files after one day.
+## Multi-Instance Behavior
+
+Multiple `MMM-Photoprism2` instances can now run in parallel without overwriting each other's backend state. Each frontend instance generates its own `instanceId`, and the `node_helper` keeps configuration, tokens, and image selection state isolated per instance.
+
+If you run multiple albums side by side, give each module block a clear MagicMirror `identifier` in your `config.js` so the overall setup stays understandable.
+
+## Lifecycle Behavior
+
+- On startup, the frontend sends its effective config once so the backend can prepare the first image early.
+- While the module is visible, the refresh timer requests a new image at `updateInterval`.
+- During `suspend()`, the timer is stopped.
+- During `resume()`, the module requests a fresh image immediately and restarts the timer.
 
 ## Getting Your PhotoPrism API Key
 
@@ -114,16 +133,6 @@ Additional development and devcontainer documentation is collected in [docs/READ
 ## Code Quality
 
 This module includes an ESLint configuration (`.eslintrc.json`) that was automatically generated to match common MagicMirror module standards. The configuration is provided as-is without any specific expertise in ESLint. It's included to help maintain code quality and consistency, but may need adjustments based on your specific needs or preferences.
-
-## Update
-
-To update the module to the latest version:
-
-```bash
-cd ~/MagicMirror/modules/MMM-Photoprism2
-git pull
-npm install
-```
 
 ## Thumbnail sizes and recommendations
 

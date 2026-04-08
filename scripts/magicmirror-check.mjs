@@ -17,14 +17,14 @@ function main() {
 
   if (!existsSync(sharedScript)) {
     console.error(
-      "⚠️  MagicMirror checker is not available in this environment."
+      "⚠️  MagicMirror checker is not available in this environment.",
     );
     console.error(
-      "   This wrapper expects the shared checker script from the MMM devcontainer base image."
+      "   This wrapper expects the shared checker script from the MMM devcontainer base image.",
     );
     console.error(`   Expected path: ${sharedScript}`);
     console.error(
-      "   Rebuild or reopen the module inside the custom devcontainer to use this command."
+      "   Rebuild or reopen the module inside the custom devcontainer to use this command.",
     );
     process.exit(1);
   }
@@ -34,13 +34,13 @@ function main() {
     cwd: process.cwd(),
     env: {
       ...process.env,
-      MAGICMIRROR_CURRENT_MODULE_DIR: process.cwd()
-    }
+      MAGICMIRROR_CURRENT_MODULE_DIR: process.cwd(),
+    },
   });
 
   child.on("error", (error) => {
     console.error(
-      `❌ Failed to start shared MagicMirror checker: ${error.message}`
+      `❌ Failed to start shared MagicMirror checker: ${error.message}`,
     );
     process.exit(1);
   });
