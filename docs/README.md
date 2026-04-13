@@ -1,13 +1,13 @@
 # MMM-Photoprism2 Documentation
 
-Der Einstieg fuer Installation, Konfiguration und Nutzung liegt in [../README.md](../README.md). Dieses Verzeichnis enthaelt Zusatzdokumentation fuer Entwicklung und Infrastruktur.
+The main entry point for installation, configuration, and usage is [../README.md](../README.md). This directory contains additional documentation for development and infrastructure.
 
-## Inhalte
+## Contents
 
-- [DEVCONTAINER.md](DEVCONTAINER.md): Devcontainer-Setup, Lifecycle und vorinstallierte Tools
+- [DEVCONTAINER.md](DEVCONTAINER.md): Devcontainer setup, lifecycle, and preinstalled tools
 
-## Architekturhinweise
+## Architecture Notes
 
-- Das Frontend erzeugt pro Modulinstanz eine eigene `instanceId`.
-- Der `node_helper` fuehrt Konfiguration, Tokens und Bildlisten getrennt pro Instanz.
-- `suspend()` und `resume()` stoppen bzw. starten nur den Frontend-Timer; Bilddaten bleiben im Browser-Cache erhalten.
+- The frontend creates a dedicated `instanceId` for each module instance.
+- The `node_helper` keeps configuration, tokens, and image lists separate per instance.
+- `suspend()` and `resume()` only stop/start the frontend timer; image data remains in the browser cache.

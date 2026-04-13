@@ -1,0 +1,51 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["**", "!**/node_modules", "!**/img", "!**/.mm-module-checker"]
+  },
+  "formatter": {
+    "enabled": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120,
+    "lineEnding": "lf",
+    "useEditorconfig": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "correctness": {
+        "noUndeclaredVariables": "error",
+        "noUnusedFunctionParameters": "warn",
+        "noUnusedVariables": "error"
+      }
+    }
+  },
+  "assist": {
+    "enabled": false,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "jsxQuoteStyle": "double",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSameLine": false
+    },
+    "globals": ["Log", "Module", "config"]
+  }
+}

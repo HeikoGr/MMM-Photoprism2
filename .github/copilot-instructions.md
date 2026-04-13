@@ -15,7 +15,7 @@
 
 ## Quality bar
 
-- Follow the repository’s existing ESLint/Prettier configuration.
+- Follow the repository's existing Biome configuration.
 - Avoid broad refactors “for cleanliness”; do focused edits.
 
 ## References

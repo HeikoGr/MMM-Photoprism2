@@ -126,7 +126,7 @@ module.exports = NodeHelper.create({
         headers: {
           Authorization: `Bearer ${state.config.apiKey}`,
         },
-        // timeout gibt es bei fetch nicht direkt
+        // fetch does not provide a direct timeout option
       });
 
       this.log("debug", "Response status:", response.status, instanceId);

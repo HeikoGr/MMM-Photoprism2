@@ -2,6 +2,8 @@ FROM ghcr.io/heikogr/mmm-devcontainer:node24-trixie-slim
 
 WORKDIR /opt/magic_mirror
 
+RUN command -v ncu >/dev/null 2>&1 || npm install -g npm-check-updates
+
 COPY --chmod=755 ./entrypoint.sh /entrypoint.sh
 
 # Provide a default PM2 ecosystem file so `pm2-runtime` can start MagicMirror.

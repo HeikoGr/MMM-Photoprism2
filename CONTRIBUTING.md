@@ -1,17 +1,17 @@
 # Contributing
 
-Danke für dein Interesse am Mitwirken! Hier sind die wichtigsten Schritte:
+Thanks for your interest in contributing. Here are the key steps:
 
-- Fork das Repository und erstelle einen Branch mit sprechendem Namen (`feat/...` oder `fix/...`).
-- Installiere Abhängigkeiten im Modul-Ordner: `npm ci`.
-- Überprüfe Format/Lint: `node --run lint` und `node --run lint:fix` falls nötig.
-- Rechtschreibung prüfen: `node --run test:spelling`.
-- Öffne einen PR mit Beschreibung, Tests/Schritten und ggf. Screenshots.
+- Fork the repository and create a clearly named branch (`feat/...` or `fix/...`).
+- Install dependencies in the module folder: `npm ci`.
+- Check formatting/linting with Biome: `node --run lint` and `node --run lint:fix` if needed.
+- Run spelling checks: `node --run test:spelling`.
+- Open a PR with a clear description, test steps, and screenshots if relevant.
 
 PR-Checklist:
 
-- Lints sauber (oder nur harmloses Prettier-Formatting).
-- Änderungen in README oder Changelog falls relevant.
-- Keine sensiblen Daten in Commits/PRs.
+- Lint is clean (or only harmless Biome fixes remain).
+- README or changelog updates are included when relevant.
+- No sensitive data in commits/PRs.
 
-Vielen Dank! 🎉
+Thank you.
