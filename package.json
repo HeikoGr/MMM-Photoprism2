@@ -30,7 +30,7 @@
     "node": ">=20.18.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
+    "@biomejs/biome": "^2.4.16",
     "cspell": "^10.0.0",
     "prettier-plugin-jinja-template": "2.2.0"
   }
