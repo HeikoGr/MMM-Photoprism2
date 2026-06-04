@@ -1,6 +1,6 @@
 {
   "name": "mmm-photoprism2",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "MagicMirror² module to display random photos from PhotoPrism albums",
   "main": "MMM-Photoprism2.js",
   "type": "commonjs",
@@ -16,7 +16,7 @@
     "check": "node check.js ../../config/config.js || true",
     "mmcheck": "node scripts/magicmirror-check.mjs --devcontainer-only --current || true",
     "deps:check": "npm outdated && ncu",
-    "deps:update": "ncu -u && npm install"
+    "deps:update": "ncu -u && npm install && npx biome migrate --write"
   },
   "keywords": [
     "MagicMirror²",
@@ -30,8 +30,8 @@
     "node": ">=20.18.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
-    "cspell": "^10.0.0",
+    "@biomejs/biome": "^2.4.16",
+    "cspell": "^10.0.1",
     "prettier-plugin-jinja-template": "2.2.0"
   }
 }
