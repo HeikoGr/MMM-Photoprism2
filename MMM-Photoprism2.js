@@ -31,7 +31,7 @@ Module.register("MMM-Photoprism2", {
   },
 
   getScripts() {
-    return ["lib/runtime-utils.js"];
+    return [this.file("lib/runtime-utils.js")];
   },
 
   getStyles() {
