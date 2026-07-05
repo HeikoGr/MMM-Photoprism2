@@ -1,9 +1,5 @@
 /* eslint-disable no-console */
 function createInstanceId(prefix = "photoprism") {
-  if (globalThis.MMModuleRuntimeUtils?.generateScopedId) {
-    return globalThis.MMModuleRuntimeUtils.generateScopedId(prefix);
-  }
-
   return `${prefix}_${Date.now().toString(36)}`;
 }
 
@@ -31,7 +27,7 @@ Module.register("MMM-Photoprism2", {
   },
 
   getScripts() {
-    return [this.file("lib/runtime-utils.js")];
+    return [this.file("lib/mmm-shared.js")];
   },
 
   getStyles() {
@@ -39,8 +35,27 @@ Module.register("MMM-Photoprism2", {
   },
 
   start() {
-    this.log("info", "Starting module");
+    this.shared = globalThis.MMModuleShared;
     this.instanceId = createInstanceId();
+    this.sharedContext = this.shared.createModuleContext(
+      "MMM-Photoprism2",
+      this.identifier,
+      {
+        instanceId: this.instanceId,
+        logLevel: this.config.logLevel || "info",
+        logStructured: true,
+        logRedaction: true,
+      },
+    );
+    this.transport = this.shared.createTransport({
+      moduleName: "MMM-Photoprism2",
+      identifier: this.identifier,
+      instanceId: this.instanceId,
+      sendSocketNotification: this.sendSocketNotification.bind(this),
+    });
+    this.notifications = this.transport.notifications;
+
+    this.log("info", "Starting module");
     this.currentImage = null;
     this.loaded = false;
     this.error = null;
@@ -54,7 +69,9 @@ Module.register("MMM-Photoprism2", {
     try {
       const cfg = this.getEffectiveConfig();
       if (cfg) {
-        this.sendSocketNotification("CONFIG", cfg);
+        this.transport.sendRequest("FETCH_IMAGE", {
+          config: cfg,
+        });
         this.hasRequestedConfig = true;
       }
     } catch (e) {
@@ -76,22 +93,29 @@ Module.register("MMM-Photoprism2", {
     }
 
     this.log("debug", `Received socket notification: ${notification}`);
-    if (notification === "IMAGE_READY") {
+    if (
+      notification === this.notifications.RESPONSE &&
+      payload?.identifier === this.identifier &&
+      payload?.action === "FETCH_IMAGE"
+    ) {
       this.log("info", "New image ready:", payload);
 
       try {
-        await this.preloadImage(payload.path);
+        await this.preloadImage(payload?.data?.path);
       } catch (e) {
         this.log("warn", "Error during preload:", e);
       }
 
-      this.currentImage = payload;
+      this.currentImage = payload.data;
       this.loaded = true;
       this.error = null;
       this.updateDom(this.config.fadeSpeed);
-    } else if (notification === "ERROR") {
+    } else if (
+      notification === this.notifications.ERROR &&
+      payload?.identifier === this.identifier
+    ) {
       this.log("error", "Error received:", payload);
-      this.error = payload?.message || payload || "Unknown error";
+      this.error = payload?.error?.message || "Unknown error";
       this.loaded = true;
       this.updateDom();
     }
@@ -109,7 +133,9 @@ Module.register("MMM-Photoprism2", {
     this.log("info", "Module resumed");
 
     const cfg = this.getEffectiveConfig();
-    this.sendSocketNotification("CONFIG", cfg);
+    this.transport.sendRequest("FETCH_IMAGE", {
+      config: cfg,
+    });
     this.startUpdateTimer();
     this.isSuspended = false;
   },
@@ -123,7 +149,9 @@ Module.register("MMM-Photoprism2", {
       this.log("debug", "Interval triggered, requesting new image");
       this.error = null;
       const cfg = this.getEffectiveConfig();
-      this.sendSocketNotification("CONFIG", cfg);
+      this.transport.sendRequest("FETCH_IMAGE", {
+        config: cfg,
+      });
     }, this.config.updateInterval);
   },
 
@@ -138,22 +166,24 @@ Module.register("MMM-Photoprism2", {
 
   // Simple log helper to control verbosity from the module config
   log(level, ...args) {
-    if (
-      !this.moduleLogger &&
-      globalThis.MMModuleRuntimeUtils?.createLevelLogger
-    ) {
-      this.moduleLogger = globalThis.MMModuleRuntimeUtils.createLevelLogger({
-        prefix: "[MMM-Photoprism2]",
+    if (!this.moduleLogger && this.shared?.createLogger) {
+      this.moduleLogger = this.shared.createLogger({
+        moduleName: "MMM-Photoprism2",
+        identifier: this.identifier,
         getLevel: () =>
-          (this.config && this.config.logLevel) ||
-          this.defaults.logLevel ||
-          "info",
+          (this.config && this.config.logLevel) || this.defaults.logLevel || "info",
+        structured: false,
+        redact: true,
       });
     }
 
     if (this.moduleLogger) {
       try {
-        this.moduleLogger.log(level, ...args);
+        if (typeof this.moduleLogger[level] === "function") {
+          this.moduleLogger[level](args[0], args.slice(1));
+        } else {
+          this.moduleLogger.info(args[0], args.slice(1));
+        }
       } catch {
         // ignore any console errors
       }

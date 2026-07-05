@@ -1,7 +1,7 @@
 /* eslint-disable n/no-missing-require */
 const NodeHelper = require("node_helper");
 /* eslint-enable n/no-missing-require */
-const { createLevelLogger } = require("./lib/runtime-utils");
+const shared = require("./lib/mmm-shared");
 
 function withQuery(url, params) {
   const query = new URLSearchParams(params).toString();
@@ -24,9 +24,18 @@ function buildInstanceState() {
 module.exports = NodeHelper.create({
   start() {
     this.instanceStates = new Map();
-    this.baseLogger = createLevelLogger({
-      prefix: "[MMM-Photoprism2]",
+    this.notifications = shared.buildNotifications("MMM-Photoprism2");
+    this.transport = shared.createNodeTransport({
+      moduleName: "MMM-Photoprism2",
+      sendSocketNotification: this.sendSocketNotification.bind(this),
+    });
+    this.errorFactory = shared.createErrorFactory();
+    this.baseLogger = shared.createLogger({
+      moduleName: "MMM-Photoprism2",
+      identifier: "node_helper",
       getLevel: () => "info",
+      structured: true,
+      redact: true,
     });
     this.log("info", "Node helper started");
   },
@@ -40,15 +49,13 @@ module.exports = NodeHelper.create({
   },
 
   log(level, message, data = null, instanceId = "global") {
-    const logger = createLevelLogger({
-      prefix:
-        instanceId === "global"
-          ? "[MMM-Photoprism2]"
-          : `[MMM-Photoprism2:${instanceId}]`,
+    const logger = shared.createLogger({
+      moduleName: "MMM-Photoprism2",
+      identifier: instanceId,
       getLevel: () =>
-        instanceId === "global"
-          ? "info"
-          : this.getInstanceState(instanceId).logLevel || "info",
+        instanceId === "global" ? "info" : this.getInstanceState(instanceId).logLevel || "info",
+      structured: true,
+      redact: true,
     });
 
     if (Array.isArray(data)) {
@@ -61,20 +68,29 @@ module.exports = NodeHelper.create({
         TakenAt: item.TakenAt,
         PlaceLabel: item.PlaceLabel,
       }));
-      logger.log(level, message, limitedData);
+      logger[level](message, limitedData);
       return;
     }
 
     if (data !== null && data !== undefined) {
-      logger.log(level, message, data);
+      logger[level](message, data);
       return;
     }
 
-    logger.log(level, message);
+    logger[level](message);
   },
 
   socketNotificationReceived(notification, payload) {
-    const instanceId = payload?.instanceId || "default";
+    if (notification !== this.notifications.REQUEST) {
+      return;
+    }
+
+    if (payload?.action !== "FETCH_IMAGE") {
+      return;
+    }
+
+    const requestEnvelope = payload;
+    const instanceId = payload?.instanceId || payload?.identifier || "default";
     const state = this.getInstanceState(instanceId);
 
     this.log(
@@ -83,8 +99,8 @@ module.exports = NodeHelper.create({
       null,
       instanceId,
     );
-    if (notification === "CONFIG") {
-      state.config = { ...payload };
+    if (notification === this.notifications.REQUEST) {
+      state.config = { ...(payload?.data?.config || {}) };
       // adopt log level from frontend config if provided
       if (state.config && state.config.logLevel) {
         state.logLevel = state.config.logLevel;
@@ -99,11 +115,11 @@ module.exports = NodeHelper.create({
         },
         instanceId,
       );
-      this.fetchAlbum(instanceId);
+      this.fetchAlbum(instanceId, requestEnvelope);
     }
   },
 
-  async fetchAlbum(instanceId = "default") {
+  async fetchAlbum(instanceId = "default", requestEnvelope) {
     const state = this.getInstanceState(instanceId);
 
     try {
@@ -150,10 +166,16 @@ module.exports = NodeHelper.create({
           await response.text(),
           instanceId,
         );
-        this.sendSocketNotification("ERROR", {
-          instanceId,
-          message: "Invalid response from server",
-        });
+        this.transport.sendError(
+          requestEnvelope,
+          this.errorFactory.createError(
+            "INVALID_RESPONSE",
+            "Invalid response from server",
+            { instanceId },
+            true,
+            "error",
+          ),
+        );
         return;
       }
 
@@ -181,32 +203,50 @@ module.exports = NodeHelper.create({
         }));
         this.log("debug", "Sample of album contents:", summary, instanceId);
 
-        this.selectRandomImage(instanceId);
       } else {
         this.log("warn", "Invalid response format:", data, instanceId);
-        this.sendSocketNotification("ERROR", {
-          instanceId,
-          message: "Invalid response format from server",
-        });
+        this.transport.sendError(
+          requestEnvelope,
+          this.errorFactory.createError(
+            "INVALID_FORMAT",
+            "Invalid response format from server",
+            { instanceId },
+            true,
+            "error",
+          ),
+        );
       }
     } catch (error) {
       this.log("error", "Error fetching album:", error.message, instanceId);
-      this.sendSocketNotification("ERROR", {
-        instanceId,
-        message: "Failed to fetch album",
-      });
+      this.transport.sendError(
+        requestEnvelope,
+        this.errorFactory.fromException(error, {
+          code: "FETCH_FAILED",
+          retryable: true,
+          details: { instanceId },
+        }),
+      );
+      return;
     }
+
+    this.selectRandomImage(instanceId, requestEnvelope);
   },
 
-  async selectRandomImage(instanceId = "default") {
+  async selectRandomImage(instanceId = "default", requestEnvelope) {
     const state = this.getInstanceState(instanceId);
 
     if (state.images.length === 0) {
       this.log("warn", "No images available in album", null, instanceId);
-      this.sendSocketNotification("ERROR", {
-        instanceId,
-        message: "No images available in album",
-      });
+      this.transport.sendError(
+        requestEnvelope,
+        this.errorFactory.createError(
+          "NO_IMAGES",
+          "No images available in album",
+          { instanceId },
+          true,
+          "warn",
+        ),
+      );
       return;
     }
 
@@ -236,10 +276,16 @@ module.exports = NodeHelper.create({
           selectedImage,
           instanceId,
         );
-        this.sendSocketNotification("ERROR", {
-          instanceId,
-          message: "No files found for selected image",
-        });
+        this.transport.sendError(
+          requestEnvelope,
+          this.errorFactory.createError(
+            "NO_FILES",
+            "No files found for selected image",
+            { instanceId },
+            true,
+            "warn",
+          ),
+        );
         return;
       }
 
@@ -283,7 +329,7 @@ module.exports = NodeHelper.create({
         state.currentImage,
         instanceId,
       );
-      this.sendSocketNotification("IMAGE_READY", {
+      this.transport.sendSuccess(requestEnvelope, {
         ...state.currentImage,
         instanceId,
       });
@@ -294,10 +340,14 @@ module.exports = NodeHelper.create({
         error.message,
         instanceId,
       );
-      this.sendSocketNotification("ERROR", {
-        instanceId,
-        message: "Failed to prepare image URL",
-      });
+      this.transport.sendError(
+        requestEnvelope,
+        this.errorFactory.fromException(error, {
+          code: "PREPARE_IMAGE_FAILED",
+          retryable: true,
+          details: { instanceId },
+        }),
+      );
     }
   },
 });
