@@ -12,10 +12,15 @@
   "containerEnv": {
     "IN_DEVCONTAINER": "1"
   },
-  "forwardPorts": [8080],
+  "forwardPorts": [
+    8080
+  ],
   "customizations": {
     "vscode": {
-      "extensions": ["actboy168.tasks", "dbaeumer.vscode-eslint"],
+      "extensions": [
+        "actboy168.tasks",
+        "ms-azuretools.vscode-containers"
+      ],
       "settings": {
         "chat.mcp.autoStart": true,
         "editor.formatOnSave": true,
