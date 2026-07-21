@@ -1,6 +1,10 @@
 # MMM-Photoprism2 Documentation
 
-The main entry point for installation, configuration, and usage is [../README.md](../README.md). This directory contains additional documentation for development and infrastructure.
+User-facing installation, configuration, sizing, and troubleshooting documentation now lives in the project wiki.
+
+- Wiki: <https://github.com/HeikoGr/MMM-Photoprism2/wiki>
+
+This directory contains additional documentation for development and infrastructure.
 
 ## Contents
 
