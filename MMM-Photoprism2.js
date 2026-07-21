@@ -27,7 +27,7 @@ Module.register("MMM-Photoprism2", {
   },
 
   getScripts() {
-    return [this.file("lib/mmm-shared.js")];
+    return [this.file("lib/mmm-shared/mmm-shared.js")];
   },
 
   getStyles() {

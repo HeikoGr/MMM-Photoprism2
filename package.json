@@ -9,6 +9,7 @@
     "url": "git+https://github.com/HeikoGr/MMM-Photoprism2.git"
   },
   "scripts": {
+    "postinstall": "node scripts/install-mmm-shared-submodule.js",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "test": "node --run lint",
