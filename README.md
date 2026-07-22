@@ -8,10 +8,18 @@ MagicMirror module that displays random photos from PhotoPrism albums.
 cd ~/MagicMirror/modules
 git clone https://github.com/HeikoGr/MMM-Photoprism2.git
 cd MMM-Photoprism2
-npm install
+npm ci --omit=dev
 ```
 
-## Minimal Example
+## Update
+
+```bash
+cd ~/MagicMirror/modules/MMM-Photoprism2
+git pull
+npm ci --omit=dev
+```
+
+## Configuration
 
 ```js
 {
@@ -23,7 +31,7 @@ npm install
     albumId: "your-album-id",
     updateInterval: 5 * 60 * 1000,
   },
-}
+},
 ```
 
 ## Documentation
