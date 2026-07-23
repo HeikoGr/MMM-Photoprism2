@@ -2,6 +2,10 @@
 
 MMM-Photoprism2 shows random photos from a chosen PhotoPrism album inside MagicMirror.
 
+## Screenshot
+
+![MMM-Photoprism2](../screenshot.png)
+
 Use this wiki if you want to:
 
 - install the module cleanly
