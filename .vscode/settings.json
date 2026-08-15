@@ -1,0 +1,64 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+  "editor.rulers": [100],
+  "editor.trimAutoWhitespace": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "editor.defaultFormatter": "biomejs.biome",
+  "files.exclude": {
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/cache": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules": true,
+    "**/.git": true
+  },
+  "debug.console.fontSize": 13,
+  "debug.console.wordWrap": true,
+  "terminal.integrated.scrollback": 5000,
+  "git.autofetch": true,
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true
+  },
+  "chat.mcp.serverSampling": {
+    "MMM-Photoprism2/.vscode/mcp.json: microsoft/playwright-mcp": {
+      "allowedModels": []
+    }
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "chat.tools.terminal.autoApprove": {
+    "/^cd /opt/magic_mirror/modules/MMM-Photoprism2 && node --run lint$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  },
+  "markdown.validate.enabled": true,
+  // Copilot does not read .github/copilot-instructions.md when generating commit messages,
+  // so the commit conventions are pointed at explicitly here.
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "file": ".github/commit-instructions.md"
+    }
+  ],
+  "chat.mcp.autoStart": true,
+  // Guided commit form matching commitlint.config.js. The scope list is optional;
+  // leaving it empty is fine for repo-wide changes.
+  "conventionalCommits.showEditor": true,
+  "conventionalCommits.promptScopes": true,
+  "conventionalCommits.promptBody": true,
+  "conventionalCommits.promptFooter": true,
+  "conventionalCommits.scopes": ["photos", "cache", "config", "deps", "devcontainer"]
+}

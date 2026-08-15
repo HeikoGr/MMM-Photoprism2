@@ -7,10 +7,13 @@
   "workspaceFolder": "/opt/magic_mirror/modules/MMM-Photoprism2",
   "workspaceMount": "source=${localWorkspaceFolder},target=/opt/magic_mirror/modules/MMM-Photoprism2,type=bind",
   "overrideCommand": false,
+  "runArgs": ["--shm-size=1g"],
   "shutdownAction": "stopContainer",
   "remoteUser": "root",
   "containerEnv": {
-    "IN_DEVCONTAINER": "1"
+    "IN_DEVCONTAINER": "1",
+    "PLAYWRIGHT_CHROMIUM_ARGS": "--no-sandbox --disable-dev-shm-usage --disable-gpu",
+    "ENABLE_PLAYWRIGHT_MCP": "1"
   },
   "forwardPorts": [
     8080
@@ -29,5 +32,5 @@
     }
   },
   "postCreateCommand": "/bin/sh .devcontainer/postCreate.sh",
-  "postStartCommand": "echo 'Devcontainer started. MagicMirror at http://localhost:8080'; echo 'Playwright MCP is configured in .vscode/mcp.json'"
+  "postStartCommand": "mkdir -p /tmp/playwright-mcp-output && if [ \"${ENABLE_PLAYWRIGHT_MCP:-1}\" = \"1\" ]; then nohup playwright-mcp --headless --isolated --no-sandbox --port=8931 --output-dir=/tmp/playwright-mcp-output > /tmp/playwright-mcp.log 2>&1 & echo \"Playwright MCP started (logs: /tmp/playwright-mcp.log, port: 8931)\"; else echo 'Playwright MCP disabled via ENABLE_PLAYWRIGHT_MCP'; fi; echo 'Devcontainer started. MagicMirror at http://localhost:8080'; echo 'Playwright MCP is configured in .vscode/mcp.json'"
 }

@@ -9,6 +9,7 @@
     "url": "git+https://github.com/HeikoGr/MMM-Photoprism2.git"
   },
   "scripts": {
+    "prepare": "node scripts/install-hooks.js",
     "postinstall": "node scripts/install-mmm-shared-submodule.js",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -17,6 +18,11 @@
     "check": "node --run mmcheck",
     "mmcheck": "node scripts/magicmirror-check.mjs --devcontainer-only --current",
     "deps:update": "npx --yes npm-check-updates -u && npm install && npx @biomejs/biome migrate --write"
+  },
+  "lint-staged": {
+    "*.{js,cjs,mjs,jsx,ts,tsx,json,jsonc,css}": [
+      "biome check --write --files-ignore-unknown=true"
+    ]
   },
   "keywords": [
     "MagicMirror²",
@@ -31,7 +37,19 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.7",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@cspell/dict-de-de": "^4.1.2",
     "cspell": "^10.0.1",
-    "prettier-plugin-jinja-template": "2.2.0"
+    "lint-staged": "^17.3.0",
+    "prettier-plugin-jinja-template": "2.2.0",
+    "simple-git-hooks": "^2.13.1"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx --no-install lint-staged",
+    "commit-msg": "npx --no-install commitlint --edit $1 && node scripts/check-commit-scope.js $1"
+  },
+  "allowScripts": {
+    "simple-git-hooks@2.13.1": true
   }
 }

@@ -46,6 +46,8 @@ copy_from_template() {
 
   if [ ! -f "$target" ] && [ -f "$template" ]; then
     cp "$template" "$target"
+    # Convert CRLF to LF (Windows -> Unix line endings)
+    sed -i 's/\r$//' "$target" 2>/dev/null || true
     echo "✓ Created: $name (from template)"
   fi
 }
@@ -71,6 +73,8 @@ create_symlink "${MODULE_DIR}/config/.env" "${MAGICMIRROR_PATH}/.env" ".env"
 ENV_FILE="${MAGICMIRROR_PATH}/.env"
 if [ -f "$ENV_FILE" ]; then
   echo "Loading environment variables from $ENV_FILE"
+  # Fix line endings (CRLF -> LF) before sourcing
+  sed -i 's/\r$//' "$ENV_FILE" 2>/dev/null || true
   set -a
   . "$ENV_FILE"
   set +a
@@ -99,18 +103,49 @@ if [ -d "${MODULES_DIR}" ]; then
     if [ -f "$MOD/package.json" ]; then
       if [ ! -d "$MOD/node_modules" ] || [ -z "$(ls -A "$MOD/node_modules" 2>/dev/null)" ]; then
         echo "${YELLOW}Installing dependencies: $(basename "$MOD")${NC}"
-        npm --prefix "$MOD" install --omit=dev --no-audit --no-fund || true
+        npm --prefix "$MOD" install --no-audit --no-fund || true
       fi
     fi
   done
 fi
+
+# Validate config file before starting PM2
+echo "${GREEN}Validating MagicMirror configuration...${NC}"
+CONFIG_FILE="${MAGICMIRROR_PATH}/config/config.js"
+
+if [ ! -f "$CONFIG_FILE" ]; then
+  echo "${RED}ERROR: Config file not found: $CONFIG_FILE${NC}"
+  echo "${YELLOW}Please create a config.js file. You can copy from config.template.js${NC}"
+  echo "Dropping to shell for debugging..."
+  exec /bin/sh
+fi
+
+# Try to validate config by requiring it in Node.js
+node -e "try { require('$CONFIG_FILE'); console.log('Config OK'); } catch(e) { console.error('CONFIG ERROR:', e.message); process.exit(1); }" 2>&1 || {
+  CONFIG_EXIT=$?
+  echo "${RED}ERROR: Configuration validation failed (exit code: $CONFIG_EXIT)${NC}"
+  echo "${YELLOW}Check your config.js file for syntax errors.${NC}"
+  echo "Dropping to shell for debugging..."
+  exec /bin/sh
+}
 
 # Start MagicMirror
 cd "$MAGICMIRROR_PATH"
 echo "${GREEN}Starting MagicMirror under PM2...${NC}"
 
 if command -v pm2-runtime >/dev/null 2>&1; then
-  exec pm2-runtime start /opt/magic_mirror/ecosystem.config.js
+  # Use exec to replace this shell process with pm2-runtime
+  # Add error handling to catch pm2-runtime startup failures
+  exec pm2-runtime start /opt/magic_mirror/ecosystem.config.js --error /tmp/pm2-error.log || {
+    PM2_EXIT=$?
+    echo "${RED}ERROR: PM2 failed to start (exit code: $PM2_EXIT)${NC}"
+    if [ -f /tmp/pm2-error.log ]; then
+      echo "${RED}PM2 Error Log:${NC}"
+      cat /tmp/pm2-error.log
+    fi
+    echo "Dropping to shell for debugging..."
+    exec /bin/sh
+  }
 else
   echo "${RED}Error: pm2-runtime not found${NC}"
   exec /bin/sh
