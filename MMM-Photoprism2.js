@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 function createInstanceId(prefix = "photoprism") {
   return `${prefix}_${Date.now().toString(36)}`;
 }

@@ -20,10 +20,9 @@
   ],
   "customizations": {
     "vscode": {
-      "extensions": [
-        "actboy168.tasks",
-        "ms-azuretools.vscode-containers"
-      ],
+      // All shared extensions come from the base image (devcontainer.metadata label in
+      // MMM-DevContainer/docker/Dockerfile) and are merged in automatically.
+      "extensions": [],
       "settings": {
         "chat.mcp.autoStart": true,
         "editor.formatOnSave": true,

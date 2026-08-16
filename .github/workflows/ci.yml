@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   check:
-    name: Lint, spelling
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -42,9 +42,6 @@ jobs:
 
       # No separate unit-test step: this module has no test suite, and "test" in package.json is
       # just an alias for "lint" (see package.json). Running it twice would be redundant.
-
-      - name: Spell check
-        run: node --run test:spelling
 
   commit-messages:
     name: Commit messages

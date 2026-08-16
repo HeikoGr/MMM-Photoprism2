@@ -1,6 +1,4 @@
-/* eslint-disable n/no-missing-require */
 const NodeHelper = require("node_helper");
-/* eslint-enable n/no-missing-require */
 const shared = require("./lib/mmm-shared/mmm-shared");
 
 function withQuery(url, params) {
