@@ -3,12 +3,19 @@ function createInstanceId(prefix = "photoprism") {
 }
 
 Module.register("MMM-Photoprism2", {
-  updateTimer: null,
   defaults: {
     apiUrl: "http://photoprism.local:2342",
     apiKey: "", // see README for how to obtain (curl is easiest)
     albumId: "", // you can find it in the URL when you browse to your album
-    updateInterval: 5 * 60 * 1000, // 5 minutes in milliseconds
+    updateInterval: 5 * 60 * 1000, // how often the displayed image changes
+    // How long the node helper reuses a cached album listing. Picking the next
+    // image works off that cache and costs no HTTP request at all.
+    albumIndexTtl: 60 * 60 * 1000,
+    // Keep rotating images while the module is hidden (e.g. under MMM-Carousel)
+    // so a fresh image is ready the moment it becomes visible again.
+    backgroundRefresh: true,
+    // Optional window without any polling, e.g. { from: "23:00", to: "06:00" }.
+    quietHours: null,
     fadeSpeed: 1000, // Fade speed in milliseconds
     maxWidth: "100%",
     maxHeight: "100%",
@@ -59,31 +66,39 @@ Module.register("MMM-Photoprism2", {
     this.loaded = false;
     this.error = null;
     this.preloadImg = null; // hidden image element used to force browser caching
-    this.isSuspended = false;
 
-    // Try to send initial configuration to the node helper early so the
-    // node side can start fetching images even if MagicMirror hasn't
-    // called `resume()` yet (some setups may delay resume/suspend calls).
-    // This makes the module more robust w.r.t. startup/suspended state.
-    try {
-      const cfg = this.getEffectiveConfig();
-      if (cfg) {
-        this.transport.sendRequest("FETCH_IMAGE", {
-          config: cfg,
-        });
-        this.hasRequestedConfig = true;
-      }
-    } catch (e) {
-      this.log("error", "Failed to send initial CONFIG:", e);
-    }
+    this.lifecycle = this.shared.createLifecycle({
+      module: this,
+      logger: this.shared.createLogger({
+        moduleName: "MMM-Photoprism2",
+        identifier: this.identifier,
+        getLevel: () => this.config.logLevel || "info",
+        structured: false,
+        redact: true,
+      }),
+      updateInterval: this.config.updateInterval,
+      minUpdateInterval: 30 * 1000,
+      backgroundRefresh: this.config.backgroundRefresh !== false,
+      quietHours: this.config.quietHours,
+      onFetch: ({ reason }) => this.requestNextImage(reason),
+    });
+    this.lifecycle.start();
   },
 
-  notificationReceived(notification) {
-    if (notification === "DOM_OBJECTS_CREATED") {
-      this.log("info", "DOM objects created, starting update interval");
-      this.clearUpdateTimer();
-      this.startUpdateTimer();
+  /**
+   * Ask the node helper for the next image. The helper picks it from its cached
+   * album index and only re-lists the album when that cache expired.
+   *
+   * @param {string} reason - Lifecycle reason, for logging only
+   */
+  requestNextImage(reason) {
+    const cfg = this.getEffectiveConfig();
+    if (!cfg) {
+      return;
     }
+
+    this.log("debug", `Requesting next image (${reason})`);
+    this.transport.sendRequest("NEXT_IMAGE", { config: cfg });
   },
 
   async socketNotificationReceived(notification, payload) {
@@ -95,7 +110,7 @@ Module.register("MMM-Photoprism2", {
     if (
       notification === this.notifications.RESPONSE &&
       payload?.identifier === this.identifier &&
-      payload?.action === "FETCH_IMAGE"
+      payload?.action === "NEXT_IMAGE"
     ) {
       this.log("info", "New image ready:", payload);
 
@@ -108,7 +123,8 @@ Module.register("MMM-Photoprism2", {
       this.currentImage = payload.data;
       this.loaded = true;
       this.error = null;
-      this.updateDom(this.config.fadeSpeed);
+      this.lifecycle.markDataReceived();
+      this.lifecycle.render(this.config.fadeSpeed);
     } else if (
       notification === this.notifications.ERROR &&
       payload?.identifier === this.identifier
@@ -116,51 +132,17 @@ Module.register("MMM-Photoprism2", {
       this.log("error", "Error received:", payload);
       this.error = payload?.error?.message || "Unknown error";
       this.loaded = true;
-      this.updateDom();
+      this.lifecycle.markFetchFailed();
+      this.lifecycle.render();
     }
   },
 
   suspend() {
-    this.log("info", "Module suspended");
-
-    this.isSuspended = true;
-    this.error = null;
-    this.clearUpdateTimer();
+    this.lifecycle.suspend();
   },
 
   resume() {
-    this.log("info", "Module resumed");
-
-    const cfg = this.getEffectiveConfig();
-    this.transport.sendRequest("FETCH_IMAGE", {
-      config: cfg,
-    });
-    this.startUpdateTimer();
-    this.isSuspended = false;
-  },
-
-  startUpdateTimer() {
-    if (this.updateTimer) {
-      return;
-    }
-
-    this.updateTimer = setInterval(() => {
-      this.log("debug", "Interval triggered, requesting new image");
-      this.error = null;
-      const cfg = this.getEffectiveConfig();
-      this.transport.sendRequest("FETCH_IMAGE", {
-        config: cfg,
-      });
-    }, this.config.updateInterval);
-  },
-
-  clearUpdateTimer() {
-    if (!this.updateTimer) {
-      return;
-    }
-
-    clearInterval(this.updateTimer);
-    this.updateTimer = null;
+    this.lifecycle.resume();
   },
 
   // Simple log helper to control verbosity from the module config

@@ -7,7 +7,10 @@
 | `apiUrl` | PhotoPrism base URL. | `http://localhost:2342` |
 | `apiKey` | PhotoPrism API key. | `""` |
 | `albumId` | Album ID to draw images from. | `""` |
-| `updateInterval` | Refresh interval in milliseconds. | `300000` |
+| `updateInterval` | How often the displayed image changes, in milliseconds. Picking the next image reuses the cached album listing and costs no HTTP request. | `300000` |
+| `albumIndexTtl` | How long the node helper reuses a cached album listing before re-listing the album. | `3600000` |
+| `backgroundRefresh` | Keep rotating images while the module is hidden (e.g. under MMM-Carousel), so a fresh image is ready the moment it becomes visible. | `true` |
+| `quietHours` | Optional window without any polling, e.g. `{ from: "23:00", to: "06:00" }`. | `null` |
 | `fadeSpeed` | Fade duration in milliseconds. | `1000` |
 | `maxWidth` | Maximum image width. | `100%` |
 | `maxHeight` | Maximum image height. | `100%` |

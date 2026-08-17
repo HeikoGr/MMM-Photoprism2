@@ -8,7 +8,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/node_modules", "!**/img", "!**/.mm-module-checker"]
+    "includes": ["**", "!**/node_modules", "!**/img", "!**/.mm-module-checker", "!lib/mmm-shared"]
   },
   "formatter": {
     "enabled": false,

@@ -1,6 +1,22 @@
-cache/
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependencies
 node_modules/
-config/custom.css
-config/config.js
+
+# Local MagicMirror overrides (generate these from the *.template files in config/)
 config/.env
+config/config.js
+config/custom.css
+
+# MagicMirror module checker (node --run check)
+.mm-module-checker/
 magicmirror-check-results.md
+
+# Playwright MCP default output dir (the devcontainer config writes to /tmp instead)
+.playwright-mcp/
+
+# Local image cache
+cache/
