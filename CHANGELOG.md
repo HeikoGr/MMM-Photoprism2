@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.16](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.0.15...v1.0.16) (2026-08-17)
+
+
+### 📦 Build & Dependencies
+
+* **deps:** bump googleapis/release-please-action from 4 to 5 ([fd06e8e](https://github.com/HeikoGr/MMM-Photoprism2/commit/fd06e8eaa085bcc40ef17059dc6a941bf0f012a9))
+* **deps:** bump googleapis/release-please-action from 4 to 5 ([2af1ce0](https://github.com/HeikoGr/MMM-Photoprism2/commit/2af1ce042816be1630e74dd6bafa96b58687e39d))
+
 ## [1.0.15](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.0.14...v1.0.15) (2026-08-15)
 
 

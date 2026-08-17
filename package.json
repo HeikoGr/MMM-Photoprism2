@@ -1,6 +1,6 @@
 {
   "name": "mmm-photoprism2",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "MagicMirror² module to display random photos from PhotoPrism albums",
   "main": "MMM-Photoprism2.js",
   "type": "commonjs",
