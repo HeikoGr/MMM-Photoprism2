@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.1.0](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.0.16...v1.1.0) (2026-08-20)
+
+
+### 🔌 Features
+
+* **config:** add new options for album index TTL and background refresh ([f88248f](https://github.com/HeikoGr/MMM-Photoprism2/commit/f88248f7c6fa55eb88b41dd36b9445055a492602))
+* **devcontainer:** add postStart script for credential handling and SSH setup ([6f4938f](https://github.com/HeikoGr/MMM-Photoprism2/commit/6f4938f21ee0af248f41935b7ad48eaaf391658e))
+* **devcontainer:** enhance Playwright MCP configuration and credential handling ([f88248f](https://github.com/HeikoGr/MMM-Photoprism2/commit/f88248f7c6fa55eb88b41dd36b9445055a492602))
+* **photos:** refactor image fetching logic to use cached album index ([f88248f](https://github.com/HeikoGr/MMM-Photoprism2/commit/f88248f7c6fa55eb88b41dd36b9445055a492602))
+
+
+### 📚 Documentation
+
+* update configuration documentation with new options ([f88248f](https://github.com/HeikoGr/MMM-Photoprism2/commit/f88248f7c6fa55eb88b41dd36b9445055a492602))
+
+
+### 🧪 Testing
+
+* add unit tests for album index functionality ([f88248f](https://github.com/HeikoGr/MMM-Photoprism2/commit/f88248f7c6fa55eb88b41dd36b9445055a492602))
+
+
+### 📦 Build & Dependencies
+
+* **deps:** bump @biomejs/biome to version 2.5.9 ([e10343b](https://github.com/HeikoGr/MMM-Photoprism2/commit/e10343b209b55538cc6e33e5f772a539df8aa529))
+
 ## [1.0.16](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.0.15...v1.0.16) (2026-08-17)
 
 
