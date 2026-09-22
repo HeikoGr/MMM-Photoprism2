@@ -12,8 +12,8 @@
 | `backgroundRefresh` | Keep rotating images while the module is hidden (e.g. under MMM-Carousel), so a fresh image is ready the moment it becomes visible. | `true` |
 | `quietHours` | Optional window without any polling, e.g. `{ from: "23:00", to: "06:00" }`. | `null` |
 | `fadeSpeed` | Fade duration in milliseconds. | `1000` |
-| `maxWidth` | Maximum image width. | `100%` |
-| `maxHeight` | Maximum image height. | `100%` |
+| `maxWidth` | Maximum width of this instance (any CSS length, e.g. `40vw`). Needed when several instances share the screen. | `100%` |
+| `maxHeight` | Maximum height of this instance (any CSS length, e.g. `50vh`). | `100%` |
 
 ## Thumbnail And Preload Options
 
@@ -51,3 +51,26 @@ If possible, keep the requested thumbnail size close to the actual displayed siz
   max-width: 100%;
 }
 ```
+
+## Multiple Instances
+
+Several instances can run at the same time, also against the same PhotoPrism server and with
+different albums. Each instance keeps its own album listing in the node helper. Give each
+instance its own position and limit its size:
+
+```js
+{
+  module: "MMM-Photoprism2",
+  position: "top_right",
+  config: { apiUrl: "http://photoprism.local:2342", apiKey: "…", albumId: "album-one", maxWidth: "35vw", maxHeight: "45vh" },
+},
+{
+  module: "MMM-Photoprism2",
+  position: "bottom_right",
+  config: { apiUrl: "http://photoprism.local:2342", apiKey: "…", albumId: "album-two", maxWidth: "35vw", maxHeight: "45vh" },
+},
+```
+
+Rules on `.MMM-Photoprism2 …` in `custom.css` (like the CSS example above) apply to every
+instance. To style a single instance, give it a class via the module's `classes` option
+(e.g. `classes: "photo-left"`) and target `.photo-left .photoprism-container`.

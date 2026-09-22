@@ -18,5 +18,3 @@ magicmirror-check-results.md
 # Playwright MCP default output dir (the devcontainer config writes to /tmp instead)
 .playwright-mcp/
 
-# Local image cache
-cache/

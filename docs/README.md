@@ -12,6 +12,13 @@ This directory contains additional documentation for development and infrastruct
 
 ## Architecture Notes
 
-- The frontend creates a dedicated `instanceId` for each module instance.
-- The `node_helper` keeps configuration, tokens, and image lists separate per instance.
-- `suspend()` and `resume()` only stop/start the frontend timer; image data remains in the browser cache.
+- Each module instance is addressed by its core-assigned `identifier`, which is unique per
+  instance and stable across browser reloads. Several instances can therefore run side by
+  side against the same PhotoPrism server; size them with `maxWidth`/`maxHeight`.
+- The `node_helper` keeps configuration, tokens, and album listings separate per instance.
+  Album listings are paged (1000 photos per request, 30 s timeout per request).
+- The frontend lifecycle comes from `lib/mmm-shared` (`createLifecycle`). With the default
+  `backgroundRefresh: true` the image timer keeps running while the module is hidden, so a
+  fresh image is ready on the next `resume()`. Only with `backgroundRefresh: false` do
+  `suspend()`/`resume()` stop and restart the timer. Image data itself remains in the browser
+  cache; the module does not cache files on disk.

@@ -1,7 +1,3 @@
-function createInstanceId(prefix = "photoprism") {
-  return `${prefix}_${Date.now().toString(36)}`;
-}
-
 Module.register("MMM-Photoprism2", {
   defaults: {
     apiUrl: "http://photoprism.local:2342",
@@ -17,9 +13,10 @@ Module.register("MMM-Photoprism2", {
     // Optional window without any polling, e.g. { from: "23:00", to: "06:00" }.
     quietHours: null,
     fadeSpeed: 1000, // Fade speed in milliseconds
+    // Size limits for this instance. Set them when several instances share the
+    // screen, e.g. maxWidth: "40vw", maxHeight: "50vh".
     maxWidth: "100%",
     maxHeight: "100%",
-    cacheRetentionDays: 1, // Number of days to keep cached images
     // Optional thumbnail usage to avoid downloading full images
     useThumbnails: true,
     // Optional exact thumbnail size string (e.g. "fit_1920" or "tile_500").
@@ -42,21 +39,18 @@ Module.register("MMM-Photoprism2", {
 
   start() {
     this.shared = globalThis.MMModuleShared;
-    this.instanceId = createInstanceId();
-    this.sharedContext = this.shared.createModuleContext(
-      "MMM-Photoprism2",
-      this.identifier,
-      {
-        instanceId: this.instanceId,
-        logLevel: this.config.logLevel || "info",
-        logStructured: true,
-        logRedaction: true,
-      },
-    );
+    this.logger = this.shared.createLogger({
+      moduleName: "MMM-Photoprism2",
+      identifier: this.identifier,
+      getLevel: () => this.config.logLevel || "info",
+      structured: false,
+      redact: true,
+    });
+    // The core-assigned identifier is unique per instance and stable across
+    // browser reloads, so the helper keeps one state per instance.
     this.transport = this.shared.createTransport({
       moduleName: "MMM-Photoprism2",
       identifier: this.identifier,
-      instanceId: this.instanceId,
       sendSocketNotification: this.sendSocketNotification.bind(this),
     });
     this.notifications = this.transport.notifications;
@@ -69,13 +63,7 @@ Module.register("MMM-Photoprism2", {
 
     this.lifecycle = this.shared.createLifecycle({
       module: this,
-      logger: this.shared.createLogger({
-        moduleName: "MMM-Photoprism2",
-        identifier: this.identifier,
-        getLevel: () => this.config.logLevel || "info",
-        structured: false,
-        redact: true,
-      }),
+      logger: this.logger,
       updateInterval: this.config.updateInterval,
       minUpdateInterval: 30 * 1000,
       backgroundRefresh: this.config.backgroundRefresh !== false,
@@ -102,16 +90,12 @@ Module.register("MMM-Photoprism2", {
   },
 
   async socketNotificationReceived(notification, payload) {
-    if (payload?.instanceId && payload.instanceId !== this.instanceId) {
+    if (payload?.identifier !== this.identifier) {
       return;
     }
 
     this.log("debug", `Received socket notification: ${notification}`);
-    if (
-      notification === this.notifications.RESPONSE &&
-      payload?.identifier === this.identifier &&
-      payload?.action === "NEXT_IMAGE"
-    ) {
+    if (notification === this.notifications.RESPONSE && payload?.action === "NEXT_IMAGE") {
       this.log("info", "New image ready:", payload);
 
       try {
@@ -125,10 +109,7 @@ Module.register("MMM-Photoprism2", {
       this.error = null;
       this.lifecycle.markDataReceived();
       this.lifecycle.render(this.config.fadeSpeed);
-    } else if (
-      notification === this.notifications.ERROR &&
-      payload?.identifier === this.identifier
-    ) {
+    } else if (notification === this.notifications.ERROR) {
       this.log("error", "Error received:", payload);
       this.error = payload?.error?.message || "Unknown error";
       this.loaded = true;
@@ -145,39 +126,11 @@ Module.register("MMM-Photoprism2", {
     this.lifecycle.resume();
   },
 
-  // Simple log helper to control verbosity from the module config
-  log(level, ...args) {
-    if (!this.moduleLogger && this.shared?.createLogger) {
-      this.moduleLogger = this.shared.createLogger({
-        moduleName: "MMM-Photoprism2",
-        identifier: this.identifier,
-        getLevel: () =>
-          (this.config && this.config.logLevel) || this.defaults.logLevel || "info",
-        structured: false,
-        redact: true,
-      });
-    }
-
-    if (this.moduleLogger) {
-      try {
-        if (typeof this.moduleLogger[level] === "function") {
-          this.moduleLogger[level](args[0], args.slice(1));
-        } else {
-          this.moduleLogger.info(args[0], args.slice(1));
-        }
-      } catch {
-        // ignore any console errors
-      }
-      return;
-    }
-
-    try {
-      if (level === "error") console.error("[MMM-Photoprism2]", ...args);
-      else if (level === "warn") console.warn("[MMM-Photoprism2]", ...args);
-      else if (level === "debug") console.debug("[MMM-Photoprism2]", ...args);
-      else console.info("[MMM-Photoprism2]", ...args);
-    } catch {
-      // ignore any console errors
+  // Log through the shared logger so verbosity follows `logLevel`.
+  log(level, message, context) {
+    const write = this.logger?.[level] || this.logger?.info;
+    if (write) {
+      write(message, context);
     }
   },
 
@@ -211,7 +164,7 @@ Module.register("MMM-Photoprism2", {
           resolve();
         };
         img.onerror = (e) => {
-          this.log("warn", "Preload failed for:", url, e);
+          this.log("warn", "Preload failed for:", { url, type: e?.type });
           // still resolve so UI can continue
           resolve();
         };
@@ -232,10 +185,7 @@ Module.register("MMM-Photoprism2", {
   // display resolution and avoids downloading unnecessarily large thumbnails.
   getEffectiveConfig() {
     if (!this.config) return null;
-    const cfg = {
-      ...this.config,
-      instanceId: this.instanceId,
-    };
+    const cfg = { ...this.config };
 
     if (cfg.useThumbnails) {
       let size = cfg.thumbnailSize;
@@ -269,53 +219,53 @@ Module.register("MMM-Photoprism2", {
     this.log("debug", "Creating DOM");
     const wrapper = document.createElement("div");
     wrapper.className = "photoprism-container";
+    wrapper.style.maxWidth = this.config.maxWidth;
+    wrapper.style.maxHeight = this.config.maxHeight;
 
-    if (this.error) {
-      this.log("error", "Showing error:", this.error);
-      wrapper.innerHTML = `Error: ${this.error}`;
-      return wrapper;
-    }
-
-    if (!this.loaded) {
-      this.log(
-        "debug",
-        "Module not loaded yet or suspended, showing loading message",
-      );
-      wrapper.innerHTML = "Loading...";
-      return wrapper;
-    }
-
-    if (this.currentImage) {
-      this.log("debug", "Creating image element for:", this.currentImage.path);
-      const img = document.createElement("img");
-      img.src = this.currentImage.path;
-      img.className = "photoprism-image";
-      wrapper.appendChild(img);
-
-      if (this.currentImage.title || this.currentImage.location) {
-        this.log("debug", "Adding title and location");
-        const infoContainer = document.createElement("div");
-        infoContainer.className = "photoprism-info";
-
-        if (this.currentImage.title) {
-          const title = document.createElement("div");
-          title.className = "photoprism-title";
-          title.innerHTML = this.currentImage.title;
-          infoContainer.appendChild(title);
-        }
-
-        if (this.currentImage.location) {
-          const location = document.createElement("div");
-          location.className = "photoprism-location";
-          location.innerHTML = this.currentImage.location;
-          infoContainer.appendChild(location);
-        }
-
-        wrapper.appendChild(infoContainer);
+    if (!this.currentImage) {
+      if (this.error) {
+        wrapper.textContent = `Error: ${this.error}`;
+      } else {
+        wrapper.textContent = this.loaded ? "No image available" : "Loading...";
       }
-    } else {
-      this.log("debug", "No image available to display");
-      wrapper.innerHTML = "No image available";
+      return wrapper;
+    }
+
+    this.log("debug", "Creating image element for:", this.currentImage.path);
+    const img = document.createElement("img");
+    img.src = this.currentImage.path;
+    img.className = "photoprism-image";
+    wrapper.appendChild(img);
+
+    // Title and location come from PhotoPrism metadata (PlaceLabel even from
+    // reverse geocoding), so they are set as text, never as HTML.
+    if (this.currentImage.title || this.currentImage.location) {
+      const infoContainer = document.createElement("div");
+      infoContainer.className = "photoprism-info";
+
+      if (this.currentImage.title) {
+        const title = document.createElement("div");
+        title.className = "photoprism-title";
+        title.textContent = this.currentImage.title;
+        infoContainer.appendChild(title);
+      }
+
+      if (this.currentImage.location) {
+        const location = document.createElement("div");
+        location.className = "photoprism-location";
+        location.textContent = this.currentImage.location;
+        infoContainer.appendChild(location);
+      }
+
+      wrapper.appendChild(infoContainer);
+    }
+
+    // A failed refresh keeps the last image on screen and only adds a hint.
+    if (this.error) {
+      const notice = document.createElement("div");
+      notice.className = "photoprism-error";
+      notice.textContent = `Error: ${this.error}`;
+      wrapper.appendChild(notice);
     }
 
     return wrapper;

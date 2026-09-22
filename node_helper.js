@@ -2,6 +2,13 @@ const NodeHelper = require("node_helper");
 const shared = require("./lib/mmm-shared/mmm-shared");
 const { createAlbumIndex, buildImageUrl, DEFAULT_TTL_MS } = require("./lib/album-index");
 
+// Album listing is paged; a page shorter than PAGE_SIZE is the last one.
+const PAGE_SIZE = 1000;
+// Upper bound so a server that ignores `offset` cannot loop us forever.
+const MAX_PAGES = 100;
+// A server that never answers must not block the in-flight refresh forever.
+const FETCH_TIMEOUT_MS = 30 * 1000;
+
 function withQuery(url, params) {
   const query = new URLSearchParams(params).toString();
   return url + (query ? "?" + query : "");
@@ -24,6 +31,7 @@ function summarizePhoto(photo) {
 module.exports = NodeHelper.create({
   start() {
     this.instanceStates = new Map();
+    this.loggers = new Map();
     this.notifications = shared.buildNotifications("MMM-Photoprism2");
     this.transport = shared.createNodeTransport({
       moduleName: "MMM-Photoprism2",
@@ -48,15 +56,25 @@ module.exports = NodeHelper.create({
     return this.instanceStates.get(instanceId);
   },
 
+  getLogger(instanceId) {
+    if (!this.loggers.has(instanceId)) {
+      this.loggers.set(
+        instanceId,
+        shared.createLogger({
+          moduleName: "MMM-Photoprism2",
+          identifier: instanceId,
+          getLevel: () => this.instanceStates.get(instanceId)?.logLevel || "info",
+          structured: true,
+          redact: true,
+        }),
+      );
+    }
+
+    return this.loggers.get(instanceId);
+  },
+
   log(level, message, data = null, instanceId = "global") {
-    const logger = shared.createLogger({
-      moduleName: "MMM-Photoprism2",
-      identifier: instanceId,
-      getLevel: () =>
-        instanceId === "global" ? "info" : this.getInstanceState(instanceId).logLevel || "info",
-      structured: true,
-      redact: true,
-    });
+    const logger = this.getLogger(instanceId);
 
     if (data !== null && data !== undefined) {
       logger[level](message, data);
@@ -72,11 +90,12 @@ module.exports = NodeHelper.create({
     }
 
     const action = payload?.action;
-    // FETCH_IMAGE is the pre-split action name and still forces a fresh listing.
-    if (action !== "NEXT_IMAGE" && action !== "REFRESH_INDEX" && action !== "FETCH_IMAGE") {
+    if (action !== "NEXT_IMAGE" && action !== "REFRESH_INDEX") {
       return;
     }
 
+    // The frontend sends its core-assigned identifier, which is unique per
+    // module instance, so several instances can share one helper and server.
     const instanceId = payload?.instanceId || payload?.identifier || "default";
     const config = payload?.data?.config || {};
     const state = this.getInstanceState(instanceId, config);
@@ -168,7 +187,7 @@ module.exports = NodeHelper.create({
 
     const image = {
       path: imageInfo.url,
-      title: photo.Title || "Untitled",
+      title: photo.Title || null,
       location: photo.PlaceLabel || null,
       takenAt: photo.TakenAt,
       fileHash: imageInfo.fileHash,
@@ -204,11 +223,47 @@ module.exports = NodeHelper.create({
 
   async fetchAlbum(instanceId, requestEnvelope) {
     const state = this.getInstanceState(instanceId);
+    const photos = [];
+    let tokens = null;
+
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const result = await this.fetchAlbumPage(instanceId, page * PAGE_SIZE);
+      if (result.error) {
+        this.transport.sendError(requestEnvelope, result.error);
+        return false;
+      }
+
+      // Tokens are per session, the first page's are as good as any.
+      tokens ??= result.tokens;
+      photos.push(...result.photos);
+      if (result.photos.length < PAGE_SIZE) {
+        break;
+      }
+
+      if (page === MAX_PAGES - 1) {
+        this.log("warn", `Album listing stopped after ${photos.length} images`, null, instanceId);
+      }
+    }
+
+    const size = state.albumIndex.setPhotos(photos, tokens);
+    this.log("info", `Album index refreshed with ${size} images`, null, instanceId);
+    return true;
+  },
+
+  /**
+   * Fetch one page of the album listing.
+   *
+   * @param {string} instanceId - Module instance
+   * @param {number} offset - Index of the first photo on this page
+   * @returns {Promise<{photos: Array, tokens: object}|{error: object}>} Page or error to send
+   */
+  async fetchAlbumPage(instanceId, offset) {
+    const state = this.getInstanceState(instanceId);
 
     const url = `${state.config.apiUrl}/api/v1/photos`;
     const params = {
-      count: 1000, // Large number to get all photos
-      offset: 0,
+      count: PAGE_SIZE,
+      offset,
       s: state.config.albumId,
       merged: true,
       order: "oldest",
@@ -223,58 +278,59 @@ module.exports = NodeHelper.create({
         headers: {
           Authorization: `Bearer ${state.config.apiKey}`,
         },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       });
     } catch (error) {
       this.log("error", "Error fetching album", error.message, instanceId);
-      this.transport.sendError(
-        requestEnvelope,
-        this.errorFactory.fromException(error, {
+      return {
+        error: this.errorFactory.fromException(error, {
           code: "FETCH_FAILED",
           retryable: true,
           details: { instanceId },
         }),
-      );
-      return false;
+      };
     }
 
     if (!response.ok) {
       this.log("warn", "Invalid response", { status: response.status }, instanceId);
-      this.transport.sendError(
-        requestEnvelope,
-        this.errorFactory.createError(
+      return {
+        error: this.errorFactory.createError(
           "INVALID_RESPONSE",
           "Invalid response from server",
           { instanceId, status: response.status },
           true,
           "error",
         ),
-      );
-      return false;
+      };
     }
 
-    const tokens = {
-      download: response.headers.get("x-download-token"),
-      preview: response.headers.get("x-preview-token"),
-    };
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      // e.g. an HTML login page served with status 200
+      data = null;
+    }
 
-    const data = await response.json();
     if (!Array.isArray(data)) {
       this.log("warn", "Invalid response format", null, instanceId);
-      this.transport.sendError(
-        requestEnvelope,
-        this.errorFactory.createError(
+      return {
+        error: this.errorFactory.createError(
           "INVALID_FORMAT",
           "Invalid response format from server",
           { instanceId },
           true,
           "error",
         ),
-      );
-      return false;
+      };
     }
 
-    const size = state.albumIndex.setPhotos(data, tokens);
-    this.log("info", `Album index refreshed with ${size} images`, null, instanceId);
-    return true;
+    return {
+      photos: data,
+      tokens: {
+        download: response.headers.get("x-download-token"),
+        preview: response.headers.get("x-preview-token"),
+      },
+    };
   },
 });
