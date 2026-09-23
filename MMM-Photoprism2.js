@@ -42,8 +42,7 @@ Module.register("MMM-Photoprism2", {
     this.logger = this.shared.createLogger({
       moduleName: "MMM-Photoprism2",
       identifier: this.identifier,
-      consoleRef: globalThis.Log || console,
-      getLevel: () => this.config.logLevel || "debug",
+      getLevel: () => this.config.logLevel,
       structured: false,
       redact: true,
     });
@@ -63,7 +62,7 @@ Module.register("MMM-Photoprism2", {
     this.preloadImg = null; // hidden image element used to force browser caching
 
     // The config goes to the backend once; it owns the rotation schedule
-    // (node_helper + lib/backend-session.js) and pushes each image.
+    // (node_helper + lib/mmm-shared/backend-session.js) and pushes each image.
     this.sendConfigure();
 
     // Only rendering and the active/paused report stay in the browser.

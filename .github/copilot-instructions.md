@@ -18,11 +18,11 @@
 - Shared infrastructure comes from the `lib/mmm-shared` submodule (`createTransport`,
   `createLogger`, `createLifecycle`). Do not change it here.
 - The backend owns the rotation (MODULE-PLAN C1-C3): the frontend sends `CONFIGURE` once and
-  `SESSION_STATE` (active/paused); `lib/backend-session.js` runs a `createLifecycle` per
+  `SESSION_STATE` (active/paused); `lib/mmm-shared/backend-session.js` runs a `createLifecycle` per
   instance in `node_helper` and pushes each image as a `DATA` event. The frontend lifecycle
   has no `onFetch` - it only gates rendering (`lifecycle.render()`). Do not add own timers.
-  `lib/backend-session.js` and `tests/backend-session.test.js` are module-local copies shared
-  with MMM-CalDAV-Tasks, MMM-HomeConnect2 and MMM-LibraryMonitor; change all copies together.
+  `backend-session.js` comes from the `lib/mmm-shared` submodule (tests there); change it in the
+  mmm-shared repo.
 - Instances are keyed by the core-assigned `this.identifier` (unique per instance, stable across
   reloads). The `node_helper` keeps one state per instance: config, album index, tokens.
 - `lib/album-index.js` caches the album listing (`albumIndexTtl`, default 60 min). A

@@ -1,10 +1,10 @@
 /*
- * Wiring only: the rotation schedule lives in lib/backend-session.js, image
+ * Wiring only: the rotation schedule lives in lib/mmm-shared/backend-session.js, image
  * selection in lib/image-source.js, the PhotoPrism API in lib/photoprism-api.js.
  */
 const NodeHelper = require("node_helper");
 const shared = require("./lib/mmm-shared/mmm-shared");
-const { createInstanceHub, formatLogEntry } = require("./lib/backend-session");
+const { createInstanceHub, formatLogEntry } = require("./lib/mmm-shared/backend-session");
 const { createImageSource } = require("./lib/image-source");
 
 // MagicMirror's logger carries the global logLevel; outside MagicMirror (tests) console.
@@ -82,8 +82,8 @@ module.exports = NodeHelper.create({
           moduleName: "MMM-Photoprism2",
           identifier: instanceId,
           consoleRef: logSink,
-          // The instance's own logLevel narrows the global one; "debug" = no extra filter.
-          getLevel: () => this.instanceStates.get(instanceId)?.logLevel || "debug",
+          // The instance's own logLevel narrows the global one.
+          getLevel: () => this.instanceStates.get(instanceId)?.logLevel,
           structured: true,
           redact: true,
         }),

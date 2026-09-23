@@ -17,8 +17,8 @@ This directory contains additional documentation for development and infrastruct
   side against the same PhotoPrism server; size them with `maxWidth`/`maxHeight`.
 - The `node_helper` keeps configuration, tokens, and album listings separate per instance.
   Album listings are paged (1000 photos per request, 30 s timeout per request).
-- The backend owns the schedule (`lib/backend-session.js`, a module-local copy shared with
-  the other modules of this author). The frontend sends its config once (`CONFIGURE`) and
+- The backend owns the schedule (`lib/mmm-shared/backend-session.js`, shared with the
+  other modules of this author). The frontend sends its config once (`CONFIGURE`) and
   reports whether it is visible (`SESSION_STATE`); `node_helper` runs one
   `createLifecycle` from `lib/mmm-shared` per instance on the server - interval, jitter,
   `quietHours`, backoff - and pushes each image as a `DATA` event. With the default
