@@ -31,7 +31,12 @@ function jsonResponse(body) {
   };
 }
 
-function createHelper() {
+/**
+ * A helper without socket.io: CONFIGURE and the pushed events go through
+ * socketNotificationReceived / sendSocketNotification. Stopped after the test
+ * so the backend rotation does not keep node alive.
+ */
+function createHelper(t) {
   const helper = Object.create(helperDefinition);
   const sent = [];
   const waiters = [];
@@ -43,18 +48,31 @@ function createHelper() {
     }
   };
   helper.start();
+  t.after(() => helper.stop());
 
-  // Send a request as the frontend with the given identifier and wait for the answer.
-  helper.request = (identifier, config, action = "NEXT_IMAGE") =>
+  const nextEvent = (identifier) =>
     new Promise((resolve) => {
       waiters.push({ identifier, resolve });
-      helper.socketNotificationReceived("MMM-Photoprism2_REQUEST", {
-        identifier,
-        instanceId: identifier,
-        action,
-        data: { config: { apiUrl: API_URL, logLevel: "error", ...config } },
-      });
     });
+
+  // Configure an instance as its frontend would and wait for the first push.
+  helper.configure = (identifier, config) => {
+    const answer = nextEvent(identifier);
+    helper.socketNotificationReceived("MMM-Photoprism2_REQUEST", {
+      identifier,
+      instanceId: identifier,
+      action: "CONFIGURE",
+      data: { config: { apiUrl: API_URL, logLevel: "error", ...config } },
+    });
+    return answer;
+  };
+
+  // Rotate once outside the schedule and wait for the push.
+  helper.next = (identifier) => {
+    const answer = nextEvent(identifier);
+    helper.hub.fetchNow(identifier, "test");
+    return answer;
+  };
 
   return { helper, sent };
 }
@@ -77,22 +95,20 @@ test("two instances on one server keep separate album indexes", async (t) => {
   const calls = stubFetch(t, (url) =>
     jsonResponse(url.searchParams.get("s") === "albumA" ? [photo("a1")] : [photo("b1")]),
   );
-  const { helper } = createHelper();
+  const { helper } = createHelper(t);
 
   const first = await Promise.all([
-    helper.request("module_1_MMM-Photoprism2", { albumId: "albumA" }),
-    helper.request("module_2_MMM-Photoprism2", { albumId: "albumB" }),
+    helper.configure("module_1_MMM-Photoprism2", { albumId: "albumA" }),
+    helper.configure("module_2_MMM-Photoprism2", { albumId: "albumB" }),
   ]);
-  const second = await Promise.all([
-    helper.request("module_1_MMM-Photoprism2", { albumId: "albumA" }),
-    helper.request("module_2_MMM-Photoprism2", { albumId: "albumB" }),
-  ]);
+  const second = await Promise.all([helper.next("module_1_MMM-Photoprism2"), helper.next("module_2_MMM-Photoprism2")]);
 
   for (const [a, b] of [first, second]) {
+    assert.equal(a.payload.action, "DATA");
     assert.match(a.payload.data.path, /hash_a1/);
     assert.match(b.payload.data.path, /hash_b1/);
   }
-  // One listing per instance; the second round is served from the caches.
+  // One listing per instance; the next rotation is served from the caches.
   assert.equal(calls.length, 2);
   assert.equal(helper.instanceStates.size, 2);
 });
@@ -104,9 +120,9 @@ test("album listings beyond one page are fetched completely", async (t) => {
     const count = Number(url.searchParams.get("count"));
     return jsonResponse(all.slice(offset, offset + count));
   });
-  const { helper } = createHelper();
+  const { helper } = createHelper(t);
 
-  await helper.request("module_1_MMM-Photoprism2", { albumId: "big" });
+  await helper.configure("module_1_MMM-Photoprism2", { albumId: "big" });
 
   assert.deepEqual(
     calls.map((c) => c.url.searchParams.get("offset")),
@@ -123,18 +139,16 @@ test("the album listing runs with a timeout and a timed-out refresh can be retri
     }
     return jsonResponse([photo("a")]);
   });
-  const { helper } = createHelper();
+  const { helper } = createHelper(t);
 
-  const failed = await helper.request("module_1_MMM-Photoprism2", { albumId: "a" });
-  assert.equal(failed.notification, "MMM-Photoprism2_ERROR");
+  const failed = await helper.configure("module_1_MMM-Photoprism2", { albumId: "a" });
+  assert.equal(failed.payload.action, "FETCH_FAILED");
   assert.equal(failed.payload.error.code, "FETCH_FAILED");
   assert.ok(calls[0].options.signal instanceof AbortSignal);
 
-  // Real requests arrive as separate socket events, after the failed refresh settled.
-  await new Promise(setImmediate);
   fail = false;
-  const retried = await helper.request("module_1_MMM-Photoprism2", { albumId: "a" });
-  assert.equal(retried.notification, "MMM-Photoprism2_RESPONSE");
+  const retried = await helper.next("module_1_MMM-Photoprism2");
+  assert.equal(retried.payload.action, "DATA");
 });
 
 test("an HTML page with status 200 is reported as invalid format", async (t) => {
@@ -144,19 +158,59 @@ test("an HTML page with status 200 is reported as invalid format", async (t) => 
     headers: new Map(),
     json: async () => JSON.parse("<!doctype html>"),
   }));
-  const { helper } = createHelper();
+  const { helper } = createHelper(t);
 
-  const answer = await helper.request("module_1_MMM-Photoprism2", { albumId: "a" });
+  const answer = await helper.configure("module_1_MMM-Photoprism2", { albumId: "a" });
 
-  assert.equal(answer.notification, "MMM-Photoprism2_ERROR");
+  assert.equal(answer.payload.action, "FETCH_FAILED");
   assert.equal(answer.payload.error.code, "INVALID_FORMAT");
 });
 
 test("photos without a title send no placeholder title", async (t) => {
   stubFetch(t, () => jsonResponse([{ ...photo("a"), Title: "" }]));
-  const { helper } = createHelper();
+  const { helper } = createHelper(t);
 
-  const answer = await helper.request("module_1_MMM-Photoprism2", { albumId: "a" });
+  const answer = await helper.configure("module_1_MMM-Photoprism2", { albumId: "a" });
 
   assert.equal(answer.payload.data.title, null);
+});
+
+test("albumIndexTtl from CONFIGURE decides when the album is listed again", async (t) => {
+  const calls = stubFetch(t, () => jsonResponse([photo("a"), photo("b")]));
+  const { helper } = createHelper(t);
+
+  await helper.configure("module_1_MMM-Photoprism2", { albumId: "a", albumIndexTtl: 60 * 60 * 1000 });
+  await helper.next("module_1_MMM-Photoprism2");
+  assert.equal(calls.length, 1, "served from the cache");
+
+  await helper.configure("module_2_MMM-Photoprism2", { albumId: "a", albumIndexTtl: 0 });
+  await helper.next("module_2_MMM-Photoprism2");
+  assert.equal(calls.length, 3, "a zero TTL lists on every rotation");
+});
+
+test("a config without apiUrl or albumId is refused at CONFIGURE", async (t) => {
+  const calls = stubFetch(t, () => jsonResponse([photo("a")]));
+  const { helper } = createHelper(t);
+
+  const answer = await helper.configure("module_1_MMM-Photoprism2", { albumId: "" });
+
+  assert.equal(answer.payload.action, "CONFIG_INVALID");
+  assert.equal(calls.length, 0);
+});
+
+test("the frontend no longer drives the rotation: NEXT_IMAGE is ignored", async (t) => {
+  const calls = stubFetch(t, () => jsonResponse([photo("a")]));
+  const { helper, sent } = createHelper(t);
+
+  for (const action of ["NEXT_IMAGE", "REFRESH_INDEX"]) {
+    helper.socketNotificationReceived("MMM-Photoprism2_REQUEST", {
+      identifier: "module_1_MMM-Photoprism2",
+      action,
+      data: { config: { apiUrl: API_URL, albumId: "a", logLevel: "error" } },
+    });
+  }
+  await new Promise(setImmediate);
+
+  assert.equal(calls.length, 0);
+  assert.equal(sent.length, 0);
 });

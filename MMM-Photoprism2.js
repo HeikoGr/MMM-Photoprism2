@@ -24,13 +24,13 @@ Module.register("MMM-Photoprism2", {
     thumbnailSize: "auto",
     // Whether to preload images into the browser cache (hidden <img>)
     preloadInBrowser: true,
-    // How verbose logging should be in the browser console.
-    // One of: "error", "warn", "info", "debug". Default is "info".
-    logLevel: "info",
+    // Optional: "none", "error", "warn", "info", "debug". Output goes through
+    // MagicMirror's Log, so the global logLevel decides; this can only narrow it.
+    logLevel: null,
   },
 
   getScripts() {
-    return [this.file("lib/mmm-shared/mmm-shared.js")];
+    return [this.file("lib/mmm-shared/mmm-shared.js"), this.file("lib/thumbnail-size.js")];
   },
 
   getStyles() {
@@ -42,7 +42,8 @@ Module.register("MMM-Photoprism2", {
     this.logger = this.shared.createLogger({
       moduleName: "MMM-Photoprism2",
       identifier: this.identifier,
-      getLevel: () => this.config.logLevel || "info",
+      consoleRef: globalThis.Log || console,
+      getLevel: () => this.config.logLevel || "debug",
       structured: false,
       redact: true,
     });
@@ -55,53 +56,63 @@ Module.register("MMM-Photoprism2", {
     });
     this.notifications = this.transport.notifications;
 
-    this.log("info", "Starting module");
+    this.logger.info("Starting module");
     this.currentImage = null;
     this.loaded = false;
     this.error = null;
     this.preloadImg = null; // hidden image element used to force browser caching
 
+    // The config goes to the backend once; it owns the rotation schedule
+    // (node_helper + lib/backend-session.js) and pushes each image.
+    this.sendConfigure();
+
+    // Only rendering and the active/paused report stay in the browser.
     this.lifecycle = this.shared.createLifecycle({
       module: this,
       logger: this.logger,
-      updateInterval: this.config.updateInterval,
-      minUpdateInterval: 30 * 1000,
+      updateInterval: 0,
       backgroundRefresh: this.config.backgroundRefresh !== false,
-      quietHours: this.config.quietHours,
-      onFetch: ({ reason }) => this.requestNextImage(reason),
+      onSessionState: ({ state }) => this.transport.sendRequest("SESSION_STATE", { state }),
     });
     this.lifecycle.start();
   },
 
   /**
-   * Ask the node helper for the next image. The helper picks it from its cached
-   * album index and only re-lists the album when that cache expired.
-   *
-   * @param {string} reason - Lifecycle reason, for logging only
+   * Send the config to the backend - at start, and again when the backend asks
+   * for it (INIT_REQUIRED, e.g. after a server restart). The thumbnail size is
+   * resolved here because it depends on this browser's window.
    */
-  requestNextImage(reason) {
+  sendConfigure() {
     const cfg = this.getEffectiveConfig();
-    if (!cfg) {
-      return;
+    if (cfg) {
+      this.transport.sendRequest("CONFIGURE", { config: cfg });
     }
-
-    this.log("debug", `Requesting next image (${reason})`);
-    this.transport.sendRequest("NEXT_IMAGE", { config: cfg });
   },
 
   async socketNotificationReceived(notification, payload) {
+    if (notification !== this.notifications.EVENT) {
+      return;
+    }
+
+    if (payload?.action === "INIT_REQUIRED") {
+      if (payload.identifier === this.identifier || payload.identifier === "*") {
+        this.sendConfigure();
+      }
+      return;
+    }
+
     if (payload?.identifier !== this.identifier) {
       return;
     }
 
-    this.log("debug", `Received socket notification: ${notification}`);
-    if (notification === this.notifications.RESPONSE && payload?.action === "NEXT_IMAGE") {
-      this.log("info", "New image ready:", payload);
+    if (payload.action === "DATA") {
+      // The path carries a PhotoPrism session token; keep it out of the default log.
+      this.logger.debug("New image ready", { requestId: payload?.requestId });
 
       try {
         await this.preloadImage(payload?.data?.path);
       } catch (e) {
-        this.log("warn", "Error during preload:", e);
+        this.logger.warn("Error during preload:", e);
       }
 
       this.currentImage = payload.data;
@@ -109,11 +120,16 @@ Module.register("MMM-Photoprism2", {
       this.error = null;
       this.lifecycle.markDataReceived();
       this.lifecycle.render(this.config.fadeSpeed);
-    } else if (notification === this.notifications.ERROR) {
-      this.log("error", "Error received:", payload);
-      this.error = payload?.error?.message || "Unknown error";
+      return;
+    }
+
+    if (["FETCH_FAILED", "CONFIG_INVALID", "CONFIG_REJECTED"].includes(payload.action)) {
+      this.logger.error("Error received", payload?.error);
+      this.error =
+        payload.action === "CONFIG_REJECTED"
+          ? `Config differs from the running instance: ${(payload.data?.mismatchKeys || []).join(", ")}`
+          : payload?.error?.message || "Unknown error";
       this.loaded = true;
-      this.lifecycle.markFetchFailed();
       this.lifecycle.render();
     }
   },
@@ -126,29 +142,20 @@ Module.register("MMM-Photoprism2", {
     this.lifecycle.resume();
   },
 
-  // Log through the shared logger so verbosity follows `logLevel`.
-  log(level, message, context) {
-    const write = this.logger?.[level] || this.logger?.info;
-    if (write) {
-      write(message, context);
-    }
-  },
-
   // Preload an image into the browser (hidden) to warm the cache.
   preloadImage(url) {
-    if (!this.config || !this.config.preloadInBrowser || !url)
-      return Promise.resolve();
+    if (!this.config?.preloadInBrowser || !url) return Promise.resolve();
 
     return new Promise((resolve) => {
       try {
         // If we already have a preload image with same src, keep it
         if (this.preloadImg && this.preloadImg.src === url) {
-          this.log("debug", "Preload image already present");
+          this.logger.debug("Preload image already present");
           return resolve();
         }
 
         // Remove old preload if present
-        if (this.preloadImg && this.preloadImg.parentNode) {
+        if (this.preloadImg?.parentNode) {
           try {
             this.preloadImg.parentNode.removeChild(this.preloadImg);
           } catch {
@@ -160,11 +167,11 @@ Module.register("MMM-Photoprism2", {
         img.style.display = "none";
         img.className = "photoprism-preload";
         img.onload = () => {
-          this.log("debug", "Preload complete for:", url);
+          this.logger.debug("Preload complete for:", url);
           resolve();
         };
         img.onerror = (e) => {
-          this.log("warn", "Preload failed for:", { url, type: e?.type });
+          this.logger.warn("Preload failed for:", { url, type: e?.type });
           // still resolve so UI can continue
           resolve();
         };
@@ -173,50 +180,28 @@ Module.register("MMM-Photoprism2", {
         (document.body || document.documentElement).appendChild(img);
         this.preloadImg = img;
       } catch (err) {
-        this.log("error", "Preload exception:", err);
+        this.logger.error("Preload exception:", err);
         resolve();
       }
     });
   },
 
-  // Build an effective config to send to the node helper. If thumbnailSize is
-  // set to 'auto' (or null), derive a sensible fit_<size> based on the browser
-  // window and devicePixelRatio. This keeps server requests aligned with the
-  // display resolution and avoids downloading unnecessarily large thumbnails.
+  // The config sent to the node helper, with the thumbnail size resolved for
+  // this browser window (lib/thumbnail-size.js).
   getEffectiveConfig() {
     if (!this.config) return null;
-    const cfg = { ...this.config };
-
-    if (cfg.useThumbnails) {
-      let size = cfg.thumbnailSize;
-      if (!size || size === "auto") {
-        try {
-          const dpr = window.devicePixelRatio || 1;
-          const maxPx =
-            Math.max(window.innerWidth || 1920, window.innerHeight || 1080) *
-            dpr;
-          // Photoprism standard sizes (increasing). We'll pick the smallest fit_ value
-          // that is >= maxPx, otherwise the largest available.
-          const available = [
-            720, 1280, 1600, 1920, 2048, 2560, 3840, 4096, 5120, 7680,
-          ];
-          const chosen =
-            available.find((s) => s >= Math.ceil(maxPx)) ||
-            available[available.length - 1];
-          size = `fit_${chosen}`;
-        } catch {
-          // Fallback to a sensible default
-          size = "fit_1920";
-        }
-      }
-      cfg.thumbnailSize = size;
-    }
-
-    return cfg;
+    return {
+      ...this.config,
+      thumbnailSize: window.Photoprism2ThumbnailSize.resolveThumbnailSize(this.config, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio,
+      }),
+    };
   },
 
   getDom() {
-    this.log("debug", "Creating DOM");
+    this.logger.debug("Creating DOM");
     const wrapper = document.createElement("div");
     wrapper.className = "photoprism-container";
     wrapper.style.maxWidth = this.config.maxWidth;
@@ -231,7 +216,7 @@ Module.register("MMM-Photoprism2", {
       return wrapper;
     }
 
-    this.log("debug", "Creating image element for:", this.currentImage.path);
+    this.logger.debug("Creating image element for:", this.currentImage.path);
     const img = document.createElement("img");
     img.src = this.currentImage.path;
     img.className = "photoprism-image";

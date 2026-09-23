@@ -17,8 +17,20 @@ This directory contains additional documentation for development and infrastruct
   side against the same PhotoPrism server; size them with `maxWidth`/`maxHeight`.
 - The `node_helper` keeps configuration, tokens, and album listings separate per instance.
   Album listings are paged (1000 photos per request, 30 s timeout per request).
-- The frontend lifecycle comes from `lib/mmm-shared` (`createLifecycle`). With the default
-  `backgroundRefresh: true` the image timer keeps running while the module is hidden, so a
-  fresh image is ready on the next `resume()`. Only with `backgroundRefresh: false` do
-  `suspend()`/`resume()` stop and restart the timer. Image data itself remains in the browser
-  cache; the module does not cache files on disk.
+- The backend owns the schedule (`lib/backend-session.js`, a module-local copy shared with
+  the other modules of this author). The frontend sends its config once (`CONFIGURE`) and
+  reports whether it is visible (`SESSION_STATE`); `node_helper` runs one
+  `createLifecycle` from `lib/mmm-shared` per instance on the server - interval, jitter,
+  `quietHours`, backoff - and pushes each image as a `DATA` event. With the default
+  `backgroundRefresh: true` it keeps refreshing while the module is hidden; with `false` it
+  pauses while every display of the instance is hidden. A failed refresh is retried with a
+  growing backoff (1, 2, 4 … 30 min) instead of waiting for the next interval.
+- The backend knows which displays are connected: an instance whose browser socket is gone
+  for 10 minutes is released and no longer fetched. A new connection is greeted with
+  `INIT_REQUIRED`, so a display registers again after a server restart without a reload.
+- Two displays of one instance share its schedule. The first `CONFIGURE` decides; a later
+  one with different credentials is refused (`CONFIG_REJECTED`), other differences are only
+  logged.
+- The thumbnail size is resolved in the browser (it depends on the window) and sent with
+  `CONFIGURE`. Image data itself remains in the browser cache; the module does not cache
+  files on disk.

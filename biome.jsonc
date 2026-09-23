@@ -1,5 +1,8 @@
+// Shared Biome configuration of the MagicMirror modules (mmm-shared, MMM-CalDAV-Tasks,
+// MMM-HomeConnect2, MMM-LibraryMonitor, MMM-Photoprism2, MMM-Webuntis). Keep it identical across the repos;
+// only defaultBranch, the asset ignores and module-specific globals differ.
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.9/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -8,10 +11,18 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/node_modules", "!**/img", "!**/.mm-module-checker", "!lib/mmm-shared"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.mm-module-checker",
+      "!lib/mmm-shared",
+      "!**/*.md",
+      "!**/*.png",
+      "!**/img"
+    ]
   },
   "formatter": {
-    "enabled": false,
+    "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 120,
@@ -21,16 +32,36 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "none",
+      "preset": "recommended",
+      "complexity": {
+        "noArguments": "error",
+        "noImportantStyles": "warn",
+        "useDateNow": "warn",
+        "useOptionalChain": "warn"
+      },
       "correctness": {
         "noUndeclaredVariables": "error",
         "noUnusedFunctionParameters": "warn",
         "noUnusedVariables": "error"
+      },
+      "style": {
+        "noDescendingSpecificity": "warn",
+        "useNodejsImportProtocol": "error",
+        "useConst": "error",
+        "useTemplate": "warn"
+      },
+      "suspicious": {
+        "noAssignInExpressions": "error",
+        "noDuplicateProperties": "error",
+        "noConsole": "off",
+        "noGlobalIsFinite": "error",
+        "noGlobalIsNan": "error",
+        "useIterableCallbackReturn": "error"
       }
     }
   },
   "assist": {
-    "enabled": false,
+    "enabled": true,
     "actions": {
       "source": {
         "organizeImports": "on"

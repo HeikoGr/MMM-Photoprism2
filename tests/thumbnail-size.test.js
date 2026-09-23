@@ -1,0 +1,21 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+
+const { resolveThumbnailSize } = require("../lib/thumbnail-size");
+
+test("auto picks the smallest fit_ size that covers the screen in device pixels", () => {
+  const config = { useThumbnails: true, thumbnailSize: "auto" };
+  assert.equal(resolveThumbnailSize(config, { width: 1920, height: 1080, devicePixelRatio: 1 }), "fit_1920");
+  assert.equal(resolveThumbnailSize(config, { width: 1920, height: 1080, devicePixelRatio: 2 }), "fit_3840");
+  assert.equal(resolveThumbnailSize(config, { width: 800, height: 480 }), "fit_1280");
+  assert.equal(resolveThumbnailSize(config, { width: 10000, height: 10000 }), "fit_7680");
+});
+
+test("an explicit size is kept, thumbnails off leaves it untouched", () => {
+  assert.equal(resolveThumbnailSize({ useThumbnails: true, thumbnailSize: "tile_500" }), "tile_500");
+  assert.equal(resolveThumbnailSize({ useThumbnails: false, thumbnailSize: "auto" }), "auto");
+});
+
+test("missing viewport values fall back to 1920x1080", () => {
+  assert.equal(resolveThumbnailSize({ useThumbnails: true, thumbnailSize: null }), "fit_1920");
+});

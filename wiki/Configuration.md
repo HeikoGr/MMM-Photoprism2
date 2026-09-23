@@ -22,7 +22,7 @@
 | `useThumbnails` | Request PhotoPrism thumbnails instead of full-size images. | `true` |
 | `thumbnailSize` | Named thumbnail size such as `fit_1920` or `tile_500`. Use `auto` for automatic sizing. | `auto` |
 | `preloadInBrowser` | Preload the next image in the browser cache. | `true` |
-| `logLevel` | Frontend console verbosity: `error`, `warn`, `info`, `debug`. | `info` |
+| `logLevel` | Optional: `none`, `error`, `warn`, `info`, `debug`. Output (browser console and `pm2 logs`) goes through MagicMirror's `Log`, so the global `logLevel` in `config.js` decides; this option can only narrow it for this module. | unset (global level) |
 
 ## Sizing Recommendations
 

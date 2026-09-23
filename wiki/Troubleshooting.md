@@ -16,7 +16,7 @@
 
 ### Need more logs
 
-Set `logLevel` to `debug` for more frontend output. The node helper inherits that setting for backend logging.
+Debug output (browser console and `pm2 logs`) appears when the global `logLevel` in `config.js` contains `DEBUG` and this module's `logLevel` is unset or `debug`.
 
 ### Why the module uses a node_helper
 

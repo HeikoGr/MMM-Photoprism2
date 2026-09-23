@@ -38,36 +38,12 @@
 
   /* soften borders with masks */
   mask-image:
-    linear-gradient(
-      to top,
-      transparent 0%,
-      black 2%,
-      black 98%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to left,
-      transparent 0%,
-      black 2%,
-      black 98%,
-      transparent 100%
-    );
+    linear-gradient(to top, transparent 0%, black 2%, black 98%, transparent 100%),
+    linear-gradient(to left, transparent 0%, black 2%, black 98%, transparent 100%);
   mask-composite: intersect;
   -webkit-mask-image:
-    linear-gradient(
-      to top,
-      transparent 0%,
-      black 2%,
-      black 98%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to left,
-      transparent 0%,
-      black 2%,
-      black 98%,
-      transparent 100%
-    );
+    linear-gradient(to top, transparent 0%, black 2%, black 98%, transparent 100%),
+    linear-gradient(to left, transparent 0%, black 2%, black 98%, transparent 100%);
   -webkit-mask-composite: intersect;
 }
 

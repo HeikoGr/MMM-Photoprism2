@@ -14,9 +14,7 @@
     "IN_DEVCONTAINER": "1",
     "PLAYWRIGHT_CHROMIUM_ARGS": "--no-sandbox --disable-dev-shm-usage --disable-gpu"
   },
-  "forwardPorts": [
-    8080
-  ],
+  "forwardPorts": [8080],
   // The host's Claude Code login, SSH keys and git config are mounted read-only so the
   // container can inherit them. Runtime bind mounts: nothing lands in the image, and all
   // that is committed here are three paths. Read-only on purpose - the container runs as
