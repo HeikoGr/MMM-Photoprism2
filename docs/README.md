@@ -32,5 +32,7 @@ This directory contains additional documentation for development and infrastruct
   one with different credentials is refused (`CONFIG_REJECTED`), other differences are only
   logged.
 - The thumbnail size is resolved in the browser (it depends on the window) and sent with
-  `CONFIGURE`. Image data itself remains in the browser cache; the module does not cache
-  files on disk.
+  `CONFIGURE`. Since only the first `CONFIGURE` of an instance counts, `thumbnailSize: "auto"`
+  follows the window of the first display; further displays of the same instance get the same
+  size. Image data itself remains in the browser cache; the module does not cache files on
+  disk.

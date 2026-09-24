@@ -96,6 +96,8 @@ Module.register("MMM-Photoprism2", {
     if (payload?.action === "INIT_REQUIRED") {
       if (payload.identifier === this.identifier || payload.identifier === "*") {
         this.sendConfigure();
+        // A restarted backend has lost the paused state too.
+        this.lifecycle?.reportSessionState?.("init-required");
       }
       return;
     }
@@ -166,11 +168,12 @@ Module.register("MMM-Photoprism2", {
         img.style.display = "none";
         img.className = "photoprism-preload";
         img.onload = () => {
-          this.logger.debug("Preload complete for:", url);
+          this.logger.debug("Preload complete");
           resolve();
         };
         img.onerror = (e) => {
-          this.logger.warn("Preload failed for:", { url, type: e?.type });
+          // The URL carries a PhotoPrism token; keep it out of the log.
+          this.logger.warn("Preload failed", { type: e?.type });
           // still resolve so UI can continue
           resolve();
         };
@@ -215,7 +218,7 @@ Module.register("MMM-Photoprism2", {
       return wrapper;
     }
 
-    this.logger.debug("Creating image element for:", this.currentImage.path);
+    this.logger.debug("Creating image element");
     const img = document.createElement("img");
     img.src = this.currentImage.path;
     img.className = "photoprism-image";
