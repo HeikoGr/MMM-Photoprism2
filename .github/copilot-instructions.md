@@ -39,7 +39,7 @@
 
 - Follow the repository's existing Biome configuration.
 - Avoid broad refactors “for cleanliness”; do focused edits.
-- Run `node --run test` (runs lint as well) after every change.
+- Run `node --run test` and `node --run lint` after every change.
 
 ## References
 

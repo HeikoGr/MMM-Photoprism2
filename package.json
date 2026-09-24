@@ -13,7 +13,7 @@
     "postinstall": "node scripts/install-mmm-shared-submodule.js",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "test": "node --test tests/*.test.js && node --run lint",
+    "test": "node --test tests/*.test.js",
     "check": "node --run mmcheck",
     "mmcheck": "node scripts/magicmirror-check.mjs --devcontainer-only --current",
     "deps:update": "npx --yes npm-check-updates -u && npm install && npx @biomejs/biome migrate --write",
@@ -33,14 +33,13 @@
   "author": "HeikoGr",
   "license": "MIT",
   "engines": {
-    "node": ">=20.18.1"
+    "node": ">=22.21.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "lint-staged": "^17.5.1",
-    "prettier-plugin-jinja-template": "2.2.0",
     "simple-git-hooks": "^2.14.0"
   },
   "simple-git-hooks": {
