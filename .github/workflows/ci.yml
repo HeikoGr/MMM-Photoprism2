@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   check:
-    name: Lint
+    name: Lint & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -29,8 +29,8 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
-          # Test the minimum version declared in package.json engines, not the latest.
-          # Otherwise the supported floor is never actually exercised.
+          # Pinned to a patch release for reproducible runs. package.json engines follows
+          # MagicMirror's own floor (>=22.21.1); that exact floor is not exercised here.
           node-version: '22.22.2'
           cache: npm
 
@@ -40,8 +40,8 @@ jobs:
       - name: Lint
         run: node --run lint
 
-      # No separate unit-test step: this module has no test suite, and "test" in package.json is
-      # just an alias for "lint" (see package.json). Running it twice would be redundant.
+      - name: Test
+        run: node --run test
 
   commit-messages:
     name: Commit messages
