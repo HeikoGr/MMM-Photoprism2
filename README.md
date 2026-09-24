@@ -4,7 +4,7 @@ MagicMirror module that displays random photos from PhotoPrism albums.
 
 ## Screenshot
 
-![MMM-Photoprism2](screenshot.png)
+![MMM-Photoprism2](img/screenshot.png)
 
 ## Installation
 

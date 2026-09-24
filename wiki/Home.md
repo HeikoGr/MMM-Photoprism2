@@ -4,7 +4,7 @@ MMM-Photoprism2 shows random photos from a chosen PhotoPrism album inside MagicM
 
 ## Screenshot
 
-![MMM-Photoprism2](https://raw.githubusercontent.com/HeikoGr/MMM-Photoprism2/main/screenshot.png)
+![MMM-Photoprism2](https://raw.githubusercontent.com/HeikoGr/MMM-Photoprism2/main/img/screenshot.png)
 
 Use this wiki if you want to:
 
