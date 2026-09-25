@@ -32,7 +32,8 @@
 - File layout: `node_helper.js` only wires the hub and the loggers. `lib/image-source.js` holds
   the per-instance state and picks the next image, `lib/photoprism-api.js` does the paged
   listing (timeout, format check, error codes), `lib/album-index.js` the TTL cache. In the
-  browser, `lib/thumbnail-size.js` resolves `thumbnailSize: "auto"` for the window.
+  browser, `lib/thumbnail-size.js` resolves `thumbnailSize: "auto"` per display and appends it
+  to the `thumbnailBase` of each image (the backend never sees the window size).
 - PhotoPrism metadata (title, place label) is rendered with `textContent`, never `innerHTML`.
 
 ## Quality bar

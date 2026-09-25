@@ -79,12 +79,12 @@ Module.register("MMM-Photoprism2", {
   /**
    * Send the config to the backend - at start, and again when the backend asks
    * for it (INIT_REQUIRED, e.g. after a server restart). The thumbnail size is
-   * resolved here because it depends on this browser's window.
+   * not resolved here: it depends on this browser's window, and the first
+   * CONFIGURE of an instance would decide it for every display (see imageUrl).
    */
   sendConfigure() {
-    const cfg = this.getEffectiveConfig();
-    if (cfg) {
-      this.transport.sendRequest("CONFIGURE", { config: cfg });
+    if (this.config) {
+      this.transport.sendRequest("CONFIGURE", { config: this.config });
     }
   },
 
@@ -110,13 +110,14 @@ Module.register("MMM-Photoprism2", {
       // The path carries a PhotoPrism session token; keep it out of the default log.
       this.logger.debug("New image ready", { requestId: payload?.requestId });
 
+      const image = { ...payload.data, path: this.imageUrl(payload.data) };
       try {
-        await this.preloadImage(payload?.data?.path);
+        await this.preloadImage(image.path);
       } catch (e) {
         this.logger.warn("Error during preload:", e);
       }
 
-      this.currentImage = payload.data;
+      this.currentImage = image;
       this.loaded = true;
       this.error = null;
       this.lifecycle.markDataReceived();
@@ -188,18 +189,14 @@ Module.register("MMM-Photoprism2", {
     });
   },
 
-  // The config sent to the node helper, with the thumbnail size resolved for
-  // this browser window (lib/thumbnail-size.js).
-  getEffectiveConfig() {
-    if (!this.config) return null;
-    return {
-      ...this.config,
-      thumbnailSize: window.Photoprism2ThumbnailSize.resolveThumbnailSize(this.config, {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        devicePixelRatio: window.devicePixelRatio,
-      }),
-    };
+  // The image URL with the thumbnail size for this browser window
+  // (lib/thumbnail-size.js), resolved per display, not per instance.
+  imageUrl(image) {
+    return window.Photoprism2ThumbnailSize.imageUrlFor(image, this.config, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      devicePixelRatio: window.devicePixelRatio,
+    });
   },
 
   getDom() {

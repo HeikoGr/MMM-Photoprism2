@@ -92,7 +92,19 @@ test("buildImageUrl produces a thumbnail URL with the preview token", () => {
   );
 
   assert.equal(info.url, "https://pp.example/api/v1/t/abc/pv/fit_1920");
+  assert.equal(info.thumbnailBase, "https://pp.example/api/v1/t/abc/pv");
   assert.equal(info.fileHash, "abc");
+});
+
+test("buildImageUrl leaves auto to the displays and falls back to fit_1920", () => {
+  const info = buildImageUrl(
+    photo("a", "abc"),
+    { apiUrl: "https://pp.example", useThumbnails: true, thumbnailSize: "auto" },
+    { preview: "pv" },
+  );
+
+  assert.equal(info.url, "https://pp.example/api/v1/t/abc/pv/fit_1920");
+  assert.equal(info.thumbnailBase, "https://pp.example/api/v1/t/abc/pv");
 });
 
 test("buildImageUrl falls back to the download URL and the public token", () => {

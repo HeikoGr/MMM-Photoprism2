@@ -31,8 +31,8 @@ This directory contains additional documentation for development and infrastruct
 - Two displays of one instance share its schedule. The first `CONFIGURE` decides; a later
   one with different credentials is refused (`CONFIG_REJECTED`), other differences are only
   logged.
-- The thumbnail size is resolved in the browser (it depends on the window) and sent with
-  `CONFIGURE`. Since only the first `CONFIGURE` of an instance counts, `thumbnailSize: "auto"`
-  follows the window of the first display; further displays of the same instance get the same
-  size. Image data itself remains in the browser cache; the module does not cache files on
-  disk.
+- The thumbnail size is resolved in the browser, per display (it depends on the window):
+  the backend sends one image per instance with `thumbnailBase`, and each display appends the
+  size that fits its own window (`lib/thumbnail-size.js`). `CONFIGURE` carries the configured
+  value (`auto`), so displays of different sizes send the same config. Image data itself
+  remains in the browser cache; the module does not cache files on disk.
