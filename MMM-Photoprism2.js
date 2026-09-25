@@ -111,10 +111,17 @@ Module.register("MMM-Photoprism2", {
       this.logger.debug("New image ready", { requestId: payload?.requestId });
 
       const image = { ...payload.data, path: this.imageUrl(payload.data) };
+      // Two DATA events can overlap (a reconnect replays the last image while the rotation
+      // sends the next one); only the newest may be shown once its preload is done.
+      this.dataSequence = (this.dataSequence || 0) + 1;
+      const sequence = this.dataSequence;
       try {
         await this.preloadImage(image.path);
       } catch (e) {
         this.logger.warn("Error during preload:", e);
+      }
+      if (sequence !== this.dataSequence) {
+        return;
       }
 
       this.currentImage = image;
