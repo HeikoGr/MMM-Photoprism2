@@ -27,7 +27,8 @@
   reloads). The `node_helper` keeps one state per instance: config, album index, tokens.
 - `lib/album-index.js` caches the album listing (`albumIndexTtl`, default 60 min). A
   rotation step picks from that cache and costs no HTTP request; only a stale index
-  triggers a paged listing (1000 photos per page, 30 s timeout per request).
+  triggers a paged listing (1000 photos per page, 30 s timeout per request). A failed
+  listing falls back to the previous index (`lib/image-source.js`); only an empty one fails.
 - Images are loaded by the browser directly from PhotoPrism; nothing is cached on disk.
 - File layout: `node_helper.js` only wires the hub and the loggers. `lib/image-source.js` holds
   the per-instance state and picks the next image, `lib/photoprism-api.js` does the paged
