@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.0...v1.2.1) (2026-09-26)
+
+
+### 🔧 Tooling
+
+* skip the commit message check on the release PR ([#33](https://github.com/HeikoGr/MMM-Photoprism2/issues/33)) ([db0d5cb](https://github.com/HeikoGr/MMM-Photoprism2/commit/db0d5cb3a8d07fae265a3f2fe2379472942c31c8))
+
 ## [1.2.0](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.1.0...v1.2.0) (2026-09-25)
 
 
