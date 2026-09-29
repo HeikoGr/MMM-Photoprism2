@@ -50,3 +50,72 @@ test("an error status releases the response body", async (t) => {
   await assert.rejects(fetchAlbumListing(config), { code: "INVALID_RESPONSE" });
   assert.ok(cancelled, "an unread error body keeps the connection busy");
 });
+
+test("a stale listing is refreshed in the background while the rotation goes on", async (t) => {
+  let releaseSecond;
+  const responses = [
+    listing([{ UID: "p1", Files: [{ Hash: "h1" }] }]),
+    new Promise((resolve) => {
+      releaseSecond = () => resolve(listing([{ UID: "p2", Files: [{ Hash: "h2" }] }]));
+    }),
+  ];
+  const fetchMock = t.mock.method(globalThis, "fetch", async () => responses.shift());
+  const source = createImageSource();
+  source.configure("i3", config);
+
+  assert.equal((await source.next("i3")).fileHash, "h1");
+  // Stale again (TTL 0), the server has not answered yet: the step does not wait for it.
+  assert.equal((await source.next("i3")).fileHash, "h1");
+  assert.equal((await source.next("i3")).fileHash, "h1");
+  assert.equal(fetchMock.mock.callCount(), 2, "one background listing at a time");
+
+  releaseSecond();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal((await source.next("i3")).fileHash, "h2");
+});
+
+test("after a failed background refresh the next try waits instead of listing on every step", async (t) => {
+  const responses = [listing([{ UID: "p1", Files: [{ Hash: "h1" }] }])];
+  const fetchMock = t.mock.method(globalThis, "fetch", async () => {
+    const next = responses.shift();
+    if (!next) throw new Error("ECONNREFUSED");
+    return next;
+  });
+  const source = createImageSource();
+  source.configure("i4", config);
+
+  await source.next("i4");
+  await source.next("i4");
+  await new Promise((resolve) => setImmediate(resolve));
+  await source.next("i4");
+  await source.next("i4");
+  assert.equal(fetchMock.mock.callCount(), 2, "the failed refresh pauses further tries");
+});
+
+test("the listing keeps only the fields the module reads", async (t) => {
+  t.mock.method(globalThis, "fetch", async () =>
+    listing([
+      {
+        UID: "p1",
+        ID: "1",
+        Title: "T",
+        PlaceLabel: "P",
+        TakenAt: "2024",
+        Camera: "x",
+        Details: { a: 1 },
+        Files: [{ Hash: "h1", Name: "n" }, { Hash: "h2" }],
+      },
+    ]),
+  );
+  const { photos } = await fetchAlbumListing(config);
+  assert.deepEqual(photos[0], {
+    UID: "p1",
+    ID: "1",
+    FileUID: undefined,
+    FileName: undefined,
+    Title: "T",
+    PlaceLabel: "P",
+    TakenAt: "2024",
+    Files: [{ Hash: "h1" }],
+  });
+});
