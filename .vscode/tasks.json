@@ -106,7 +106,7 @@
     {
       "label": "pm2: restart & clean",
       "type": "shell",
-      "command": "pm2 stop all && pm2 flush && pm2 start all",
+      "command": "pm2 flush && pm2 restart all",
       "presentation": {
         "echo": true,
         "reveal": "always",

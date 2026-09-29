@@ -60,7 +60,6 @@ function createHelper(t) {
     const answer = nextEvent(identifier);
     helper.socketNotificationReceived("MMM-Photoprism2_REQUEST", {
       identifier,
-      instanceId: identifier,
       action: "CONFIGURE",
       data: { config: { apiUrl: API_URL, logLevel: "error", ...config } },
     });
@@ -110,7 +109,7 @@ test("two instances on one server keep separate album indexes", async (t) => {
   }
   // One listing per instance; the next rotation is served from the caches.
   assert.equal(calls.length, 2);
-  assert.equal(helper.instanceStates.size, 2);
+  assert.equal(helper.imageSource.states.size, 2);
 });
 
 test("album listings beyond one page are fetched completely", async (t) => {
@@ -128,7 +127,7 @@ test("album listings beyond one page are fetched completely", async (t) => {
     calls.map((c) => c.url.searchParams.get("offset")),
     ["0", "1000"],
   );
-  assert.equal(helper.instanceStates.get("module_1_MMM-Photoprism2").albumIndex.size(), 1005);
+  assert.equal(helper.imageSource.states.get("module_1_MMM-Photoprism2").albumIndex.size(), 1005);
 });
 
 test("the album listing runs with a timeout and a timed-out refresh can be retried", async (t) => {
