@@ -4,6 +4,7 @@
 
 - Only change code and files inside this repository.
 - Keep changes minimal and directly related to the request/issue.
+- In the devcontainer `pm2-runtime` is PID 1: never `pm2 stop`, `pm2 delete` or `pm2 kill` (that ends the whole container); use `pm2 restart magicmirror`. The mirror does not restart on file changes (`watch: false`).
 - Do not introduce new dependencies unless explicitly required; if you do, update `package.json` (and existing lockfiles).
 - Never commit secrets (tokens, API keys, session cookies, personal data).
 
