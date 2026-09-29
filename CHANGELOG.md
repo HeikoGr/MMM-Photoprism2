@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.2.1](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.0...v1.2.1) (2026-09-29)
+
+
+### ⚡ Performance
+
+* keep only the photo fields the module reads in the album index ([3c6328c](https://github.com/HeikoGr/MMM-Photoprism2/commit/3c6328cdabb36bd4d7736d8ad9ee8d86a90f45b9))
+* refresh a stale album listing in the background ([3c6328c](https://github.com/HeikoGr/MMM-Photoprism2/commit/3c6328cdabb36bd4d7736d8ad9ee8d86a90f45b9))
+
+
+### 🧱 Refactoring
+
+* describe the current behavior in comments ([3c6328c](https://github.com/HeikoGr/MMM-Photoprism2/commit/3c6328cdabb36bd4d7736d8ad9ee8d86a90f45b9))
+* name the instance identifier the same everywhere ([3c6328c](https://github.com/HeikoGr/MMM-Photoprism2/commit/3c6328cdabb36bd4d7736d8ad9ee8d86a90f45b9))
+
+
+### 📦 Build & Dependencies
+
+* **deps:** bump mmm-shared to 0.4.0 ([#40](https://github.com/HeikoGr/MMM-Photoprism2/issues/40)) ([dc5ef82](https://github.com/HeikoGr/MMM-Photoprism2/commit/dc5ef82251fe09e4b609af6908aae85993a4657a))
+* **deps:** replace commitlint with a built-in commit message check ([#36](https://github.com/HeikoGr/MMM-Photoprism2/issues/36)) ([00f6c43](https://github.com/HeikoGr/MMM-Photoprism2/commit/00f6c43327f3226ee28d41f116312e526ea96e6c))
+
+
+### 🔧 Tooling
+
+* keep ci-only commits out of releases and the changelog ([#35](https://github.com/HeikoGr/MMM-Photoprism2/issues/35)) ([22d18e4](https://github.com/HeikoGr/MMM-Photoprism2/commit/22d18e4f21ab3fa8157717bd0cc859d8e2efeacb))
+* skip the commit message check on the release PR ([#33](https://github.com/HeikoGr/MMM-Photoprism2/issues/33)) ([db0d5cb](https://github.com/HeikoGr/MMM-Photoprism2/commit/db0d5cb3a8d07fae265a3f2fe2379472942c31c8))
+
+
+### 🔧 Maintenance
+
+* list ci and chore commits in the changelog ([3c6328c](https://github.com/HeikoGr/MMM-Photoprism2/commit/3c6328cdabb36bd4d7736d8ad9ee8d86a90f45b9))
+* restart instead of stop in the pm2 clean task, warn about PID 1 ([#38](https://github.com/HeikoGr/MMM-Photoprism2/issues/38)) ([2721c41](https://github.com/HeikoGr/MMM-Photoprism2/commit/2721c41d7a928896024f7898b985043a2f6c1a38))
+
 ## [1.2.0](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.1.0...v1.2.0) (2026-09-25)
 
 
