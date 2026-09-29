@@ -2,10 +2,10 @@
 /**
  * Guard against commit types that understate what the commit actually changes.
  *
- * Why this exists: low-signal types like `chore` or `ci` promise "nothing user-visible changed".
- * check-commit-msg.js only checks the *format* of the message, not whether that promise holds against the
- * diff - a real behavior change can slip into the changelog as invisible, or worse, never reach it
- * at all and have to be reconstructed from diffs later.
+ * Why this exists: check-commit-msg.js only validates the *format* of a commit message, not whether the
+ * chosen type matches what the diff actually does. A commit typed `chore` but containing a real
+ * behavior fix in runtime source still passes the format check - and because the type is low-signal,
+ * release-please files it under Maintenance instead of Fixes, and the version bump misses it.
  *
  * So: if a low-signal commit type touches runtime source, ask for a better type.
  *
