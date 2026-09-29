@@ -29,10 +29,8 @@ module.exports = NodeHelper.create({
   start() {
     this.loggers = new Map();
     this.imageSource = createImageSource({
-      getLogger: (instanceId) => this.getLogger(instanceId),
+      getLogger: (identifier) => this.getLogger(identifier),
     });
-    // Per-instance config and album index, keyed by the core-assigned identifier.
-    this.instanceStates = this.imageSource.states;
     this.getLogger("global").info("Node helper started");
 
     /*
@@ -74,22 +72,22 @@ module.exports = NodeHelper.create({
     this.hub.socketNotificationReceived(notification, payload);
   },
 
-  getLogger(instanceId) {
-    if (!this.loggers.has(instanceId)) {
+  getLogger(identifier) {
+    if (!this.loggers.has(identifier)) {
       this.loggers.set(
-        instanceId,
+        identifier,
         shared.createLogger({
           moduleName: "MMM-Photoprism2",
-          identifier: instanceId,
+          identifier,
           consoleRef: logSink,
           // The instance's own logLevel narrows the global one.
-          getLevel: () => this.instanceStates.get(instanceId)?.logLevel,
+          getLevel: () => this.imageSource.states.get(identifier)?.logLevel,
           structured: true,
           redact: true,
         }),
       );
     }
 
-    return this.loggers.get(instanceId);
+    return this.loggers.get(identifier);
   },
 });
