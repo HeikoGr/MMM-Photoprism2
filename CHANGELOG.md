@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.1...v1.2.2) (2026-10-04)
+
+
+### 📦 Build & Dependencies
+
+* **deps-dev:** bump lint-staged from 17.5.1 to 17.6.0 ([#42](https://github.com/HeikoGr/MMM-Photoprism2/issues/42)) ([d372485](https://github.com/HeikoGr/MMM-Photoprism2/commit/d3724853b25c156c8945b4585df739f120d394d9))
+* **deps:** update Biome and group weekly dependency updates ([#43](https://github.com/HeikoGr/MMM-Photoprism2/issues/43)) ([ddfe891](https://github.com/HeikoGr/MMM-Photoprism2/commit/ddfe89149a38578f17e6e9fb05c1c6e696d3ec26))
+
 ## [1.2.1](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.0...v1.2.1) (2026-09-29)
 
 
