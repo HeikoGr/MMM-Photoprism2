@@ -1,6 +1,6 @@
 {
   "name": "mmm-photoprism2",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "description": "MagicMirror² module to display random photos from PhotoPrism albums",
   "keywords": [
@@ -35,8 +35,8 @@
     "deps:update": "npx --yes npm-check-updates -u && npm install && biome migrate --write"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.14",
-    "lint-staged": "^17.5.1",
+    "@biomejs/biome": "^2.5.15",
+    "lint-staged": "^17.6.0",
     "simple-git-hooks": "^2.14.0"
   },
   "lint-staged": {
