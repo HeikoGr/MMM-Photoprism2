@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.2...v1.2.3) (2026-10-07)
+
+
+### 🔧 Tooling
+
+* ship releases via auto-merged release-ship PR and drop commit hooks ([#46](https://github.com/HeikoGr/MMM-Photoprism2/issues/46)) ([d1a9bf4](https://github.com/HeikoGr/MMM-Photoprism2/commit/d1a9bf46d82742195a89ea2c1d8c158454b889eb))
+
 ## [1.2.2](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.1...v1.2.2) (2026-10-04)
 
 
