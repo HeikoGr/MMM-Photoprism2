@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.3...v1.2.4) (2026-10-21)
+
+
+### 📦 Build & Dependencies
+
+* **deps:** update dependencies and Biome to 2.6 ([#49](https://github.com/HeikoGr/MMM-Photoprism2/issues/49)) ([cb5df32](https://github.com/HeikoGr/MMM-Photoprism2/commit/cb5df3227d533c1baedeea03f9d1976b3f75fbd2))
+
 ## [1.2.3](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.2...v1.2.3) (2026-10-07)
 
 
