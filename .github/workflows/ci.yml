@@ -32,7 +32,7 @@ jobs:
         with:
           # Pinned to a patch release for reproducible runs. package.json engines follows
           # MagicMirror's own floor (>=22.21.1); that exact floor is not exercised here.
-          node-version: '22.22.2'
+          node-version: "22.22.2"
           cache: npm
 
       - name: Install dependencies
