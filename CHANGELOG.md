@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.5](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.4...v1.2.5) (2026-10-28)
+
+
+### 📦 Build & Dependencies
+
+* **deps-dev:** bump @biomejs/biome from 2.6.2 to 2.6.3 in the npm group ([#52](https://github.com/HeikoGr/MMM-Photoprism2/issues/52)) ([6b2cfac](https://github.com/HeikoGr/MMM-Photoprism2/commit/6b2cface722e2d8c234b4044dec12dc421ce448e))
+* **deps:** read the Biome schema from node_modules and update mmm-shared ([#53](https://github.com/HeikoGr/MMM-Photoprism2/issues/53)) ([922711f](https://github.com/HeikoGr/MMM-Photoprism2/commit/922711f682a50ebc3214c96fe21416d4b7a46708))
+
 ## [1.2.4](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.3...v1.2.4) (2026-10-21)
 
 
