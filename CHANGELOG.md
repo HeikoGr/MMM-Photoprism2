@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.6](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.5...v1.2.6) (2026-11-05)
+
+
+### 📦 Build & Dependencies
+
+* **deps-dev:** bump @biomejs/biome from 2.6.3 to 2.6.4 in the npm group ([#56](https://github.com/HeikoGr/MMM-Photoprism2/issues/56)) ([65d5666](https://github.com/HeikoGr/MMM-Photoprism2/commit/65d5666a46e007f139999cf1eb8acdf0d6861c94))
+* **deps:** bump Biome to 2.6.5 and move the devcontainer to the trixie-slim image ([a194ddc](https://github.com/HeikoGr/MMM-Photoprism2/commit/a194ddc1d3bba8b66431b0d6fc1e7d0029bff052))
+* **deps:** bump Biome to 2.6.5 and move the devcontainer to the trixie-slim image ([f7b1c64](https://github.com/HeikoGr/MMM-Photoprism2/commit/f7b1c64c34c44d823434b59f5d2da5699000d363))
+
 ## [1.2.5](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.4...v1.2.5) (2026-10-28)
 
 
