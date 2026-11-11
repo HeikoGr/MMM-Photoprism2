@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.7](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.6...v1.2.7) (2026-11-11)
+
+
+### 📦 Build & Dependencies
+
+* **deps-dev:** bump @biomejs/biome from 2.6.5 to 2.6.6 in the npm group ([#61](https://github.com/HeikoGr/MMM-Photoprism2/issues/61)) ([f130d30](https://github.com/HeikoGr/MMM-Photoprism2/commit/f130d30e17b25d70d8c528231a60d20f08b97ed8))
+
+
+### 🔧 Tooling
+
+* keep the write token away from Dependabot code and test Node 22 and 24 ([#62](https://github.com/HeikoGr/MMM-Photoprism2/issues/62)) ([6c1b53e](https://github.com/HeikoGr/MMM-Photoprism2/commit/6c1b53e9feec8f35dc6cc42bf951b20c56eb7225))
+* only accept release PRs on the default branch ([#63](https://github.com/HeikoGr/MMM-Photoprism2/issues/63)) ([882a72c](https://github.com/HeikoGr/MMM-Photoprism2/commit/882a72cf78b3b946de8b53caadfbdd9308af75a8))
+
 ## [1.2.6](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.5...v1.2.6) (2026-11-05)
 
 
