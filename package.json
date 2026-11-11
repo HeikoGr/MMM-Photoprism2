@@ -1,6 +1,6 @@
 {
   "name": "mmm-photoprism2",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "private": true,
   "description": "MagicMirror² module to display random photos from PhotoPrism albums",
   "keywords": [
@@ -22,7 +22,7 @@
   "type": "commonjs",
   "main": "MMM-Photoprism2.js",
   "engines": {
-    "node": ">=22.21.1"
+    "node": ">=22.22.2 <23 || >=24"
   },
   "scripts": {
     "postinstall": "node scripts/install-mmm-shared-submodule.js",
@@ -34,6 +34,6 @@
     "deps:update": "npx --yes npm-check-updates -u && npm install && biome migrate --write"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.5"
+    "@biomejs/biome": "^2.6.6"
   }
 }

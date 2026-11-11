@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Node.js `>=20.18.1`
+- Node.js `>=22.22.2 <23` or `>=24`, the same range as MagicMirror² 2.38 (`engines` in `package.json`)
 - A reachable PhotoPrism instance
 - A PhotoPrism API key with access to the target album
 
