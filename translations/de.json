@@ -1,0 +1,7 @@
+{
+  "LOADING": "Lade …",
+  "NO_IMAGE": "Kein Bild verfügbar",
+  "ERROR": "Fehler: {message}",
+  "UNKNOWN_ERROR": "Unbekannter Fehler",
+  "CONFIG_DIFFERS": "Die Konfiguration weicht von der laufenden Instanz ab: {keys}"
+}

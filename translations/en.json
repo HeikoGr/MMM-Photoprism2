@@ -1,0 +1,7 @@
+{
+  "LOADING": "Loading...",
+  "NO_IMAGE": "No image available",
+  "ERROR": "Error: {message}",
+  "UNKNOWN_ERROR": "Unknown error",
+  "CONFIG_DIFFERS": "Config differs from the running instance: {keys}"
+}

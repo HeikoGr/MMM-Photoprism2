@@ -19,10 +19,17 @@ const { execFileSync } = require("node:child_process");
 const LOW_SIGNAL_TYPES = new Set(["chore", "docs", "style", "ci", "build", "test"]);
 
 // Paths whose content ends up running on a user's mirror.
-const RUNTIME_PATHS = [/^node_helper\.js$/, /^MMM-Photoprism2\.js$/, /^MMM-Photoprism2\.css$/];
+const RUNTIME_PATHS = [
+  /^lib\//,
+  /^translations\//,
+  /^node_helper\.js$/,
+  /^MMM-Photoprism2\.js$/,
+  /^MMM-Photoprism2\.css$/,
+];
 
-// Carve-outs inside those trees that are not runtime behavior.
-const RUNTIME_EXCEPTIONS = [/\.md$/];
+// Carve-outs inside those trees that are not runtime behavior. The submodule shows up in the
+// staged list as the bare `lib/mmm-shared`, without a trailing slash.
+const RUNTIME_EXCEPTIONS = [/^lib\/mmm-shared(\/|$)/, /\.md$/];
 
 function isRuntimePath(file) {
   if (RUNTIME_EXCEPTIONS.some((pattern) => pattern.test(file))) return false;
