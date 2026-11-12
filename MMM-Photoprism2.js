@@ -37,6 +37,13 @@ Module.register("MMM-Photoprism2", {
     return ["MMM-Photoprism2.css"];
   },
 
+  getTranslations() {
+    return {
+      de: "translations/de.json",
+      en: "translations/en.json",
+    };
+  },
+
   start() {
     this.shared = globalThis.MMModuleShared;
     this.logger = this.shared.createLogger({
@@ -136,8 +143,8 @@ Module.register("MMM-Photoprism2", {
       this.logger.error("Error received", payload?.error);
       this.error =
         payload.action === "CONFIG_REJECTED"
-          ? `Config differs from the running instance: ${(payload.data?.mismatchKeys || []).join(", ")}`
-          : payload?.error?.message || "Unknown error";
+          ? this.translate("CONFIG_DIFFERS", { keys: (payload.data?.mismatchKeys || []).join(", ") })
+          : payload?.error?.message || this.translate("UNKNOWN_ERROR");
       this.loaded = true;
       this.lifecycle.render();
     }
@@ -215,9 +222,9 @@ Module.register("MMM-Photoprism2", {
 
     if (!this.currentImage) {
       if (this.error) {
-        wrapper.textContent = `Error: ${this.error}`;
+        wrapper.textContent = this.translate("ERROR", { message: this.error });
       } else {
-        wrapper.textContent = this.loaded ? "No image available" : "Loading...";
+        wrapper.textContent = this.translate(this.loaded ? "NO_IMAGE" : "LOADING");
       }
       return wrapper;
     }
@@ -255,7 +262,7 @@ Module.register("MMM-Photoprism2", {
     if (this.error) {
       const notice = document.createElement("div");
       notice.className = "photoprism-error";
-      notice.textContent = `Error: ${this.error}`;
+      notice.textContent = this.translate("ERROR", { message: this.error });
       wrapper.appendChild(notice);
     }
 
