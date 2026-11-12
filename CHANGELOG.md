@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.7...v1.3.0) (2026-11-12)
+
+
+### 🔌 Features
+
+* translate loading and error texts ([#67](https://github.com/HeikoGr/MMM-Photoprism2/issues/67)) ([b0c280d](https://github.com/HeikoGr/MMM-Photoprism2/commit/b0c280d3c64282e2531b73c8384b6e2bea3bf125))
+
 ## [1.2.7](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.6...v1.2.7) (2026-11-11)
 
 
