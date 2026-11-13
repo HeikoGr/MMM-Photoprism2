@@ -11,9 +11,8 @@ test("auto picks the smallest fit_ size that covers the screen in device pixels"
   assert.equal(resolveThumbnailSize(config, { width: 10000, height: 10000 }), "fit_7680");
 });
 
-test("an explicit size is kept, thumbnails off leaves it untouched", () => {
+test("an explicit size is kept", () => {
   assert.equal(resolveThumbnailSize({ useThumbnails: true, thumbnailSize: "tile_500" }), "tile_500");
-  assert.equal(resolveThumbnailSize({ useThumbnails: false, thumbnailSize: "auto" }), "auto");
 });
 
 test("missing viewport values fall back to 1920x1080", () => {

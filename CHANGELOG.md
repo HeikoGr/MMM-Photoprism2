@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.3.0...v1.3.1) (2026-11-13)
+
+
+### 🧱 Refactoring
+
+* send only the image fields the display reads ([#70](https://github.com/HeikoGr/MMM-Photoprism2/issues/70)) ([2dc4120](https://github.com/HeikoGr/MMM-Photoprism2/commit/2dc4120e5014b89385bb48350aabe1e1eedefc2d))
+
 ## [1.3.0](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.2.7...v1.3.0) (2026-11-12)
 
 

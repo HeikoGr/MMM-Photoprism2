@@ -90,9 +90,7 @@ Module.register("MMM-Photoprism2", {
    * CONFIGURE of an instance would decide it for every display (see imageUrl).
    */
   sendConfigure() {
-    if (this.config) {
-      this.transport.sendRequest("CONFIGURE", { config: this.config });
-    }
+    this.transport.sendRequest("CONFIGURE", { config: this.config });
   },
 
   async socketNotificationReceived(notification, payload) {
@@ -104,7 +102,7 @@ Module.register("MMM-Photoprism2", {
       if (payload.identifier === this.identifier || payload.identifier === "*") {
         this.sendConfigure();
         // A restarted backend has lost the paused state too.
-        this.lifecycle?.reportSessionState?.("init-required");
+        this.lifecycle.reportSessionState("init-required");
       }
       return;
     }
@@ -171,13 +169,7 @@ Module.register("MMM-Photoprism2", {
         }
 
         // Remove old preload if present
-        if (this.preloadImg?.parentNode) {
-          try {
-            this.preloadImg.parentNode.removeChild(this.preloadImg);
-          } catch {
-            /* ignore removal error */
-          }
-        }
+        this.preloadImg?.remove();
 
         const img = document.createElement("img");
         img.style.display = "none";

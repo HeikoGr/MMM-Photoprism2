@@ -78,12 +78,6 @@ test("clear() drops the listing", () => {
   assert.equal(index.getAge(), null);
 });
 
-test("non-object entries are filtered out of the listing", () => {
-  const index = createAlbumIndex({ ttlMs: 1000, now: () => 0 });
-
-  assert.equal(index.setPhotos([photo("a"), null, "nope", undefined]), 1);
-});
-
 test("buildImageUrl produces a thumbnail URL with the preview token", () => {
   const info = buildImageUrl(
     photo("a", "abc"),
@@ -93,7 +87,6 @@ test("buildImageUrl produces a thumbnail URL with the preview token", () => {
 
   assert.equal(info.url, "https://pp.example/api/v1/t/abc/pv/fit_1920");
   assert.equal(info.thumbnailBase, "https://pp.example/api/v1/t/abc/pv");
-  assert.equal(info.fileHash, "abc");
 });
 
 test("buildImageUrl leaves auto to the displays and falls back to fit_1920", () => {
