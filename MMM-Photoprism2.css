@@ -7,20 +7,6 @@
   position: relative;
 }
 
-/* Blurred background layer */
-.photoprism-blur {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  filter: blur(12px) brightness(0.4);
-  z-index: 0;
-}
-
 /* Foreground photo with fade effect and softened edges */
 .photoprism-image {
   position: absolute;

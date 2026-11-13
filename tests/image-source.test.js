@@ -24,9 +24,9 @@ test("a failed listing refresh keeps rotating through the previous images", asyn
   const source = createImageSource();
   source.configure("i1", config);
 
-  assert.equal((await source.next("i1")).fileHash, "h1");
+  assert.equal((await source.next("i1")).thumbnailBase, `${config.apiUrl}/api/v1/t/h1/pt`);
   // albumIndexTtl 0: the listing is stale again, and the server is gone now.
-  assert.equal((await source.next("i1")).fileHash, "h1");
+  assert.equal((await source.next("i1")).thumbnailBase, `${config.apiUrl}/api/v1/t/h1/pt`);
 });
 
 test("without any previous listing the failure still reaches the hub", async (t) => {
@@ -63,15 +63,15 @@ test("a stale listing is refreshed in the background while the rotation goes on"
   const source = createImageSource();
   source.configure("i3", config);
 
-  assert.equal((await source.next("i3")).fileHash, "h1");
+  assert.equal((await source.next("i3")).thumbnailBase, `${config.apiUrl}/api/v1/t/h1/pt`);
   // Stale again (TTL 0), the server has not answered yet: the step does not wait for it.
-  assert.equal((await source.next("i3")).fileHash, "h1");
-  assert.equal((await source.next("i3")).fileHash, "h1");
+  assert.equal((await source.next("i3")).thumbnailBase, `${config.apiUrl}/api/v1/t/h1/pt`);
+  assert.equal((await source.next("i3")).thumbnailBase, `${config.apiUrl}/api/v1/t/h1/pt`);
   assert.equal(fetchMock.mock.callCount(), 2, "one background listing at a time");
 
   releaseSecond();
   await new Promise((resolve) => setImmediate(resolve));
-  assert.equal((await source.next("i3")).fileHash, "h2");
+  assert.equal((await source.next("i3")).thumbnailBase, `${config.apiUrl}/api/v1/t/h2/pt`);
 });
 
 test("after a failed background refresh the next try waits instead of listing on every step", async (t) => {
@@ -118,4 +118,14 @@ test("the listing keeps only the fields the module reads", async (t) => {
     TakenAt: "2024",
     Files: [{ Hash: "h1" }],
   });
+});
+
+test("an image carries only what the frontend reads", async (t) => {
+  t.mock.method(globalThis, "fetch", async () =>
+    listing([{ UID: "p1", Title: "T", PlaceLabel: "L", TakenAt: "2026", Files: [{ Hash: "h1" }] }]),
+  );
+  const source = createImageSource();
+  source.configure("i4", config);
+
+  assert.deepEqual(Object.keys(await source.next("i4")).sort(), ["location", "path", "thumbnailBase", "title"]);
 });
