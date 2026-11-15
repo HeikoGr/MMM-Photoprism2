@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.3.1...v1.3.2) (2026-11-15)
+
+
+### 🔧 Maintenance
+
+* update mmm-shared and trust GitHub's published SSH host keys ([#73](https://github.com/HeikoGr/MMM-Photoprism2/issues/73)) ([7eb2523](https://github.com/HeikoGr/MMM-Photoprism2/commit/7eb25238fea945ac25f25d96b7845895aa04a340))
+
 ## [1.3.1](https://github.com/HeikoGr/MMM-Photoprism2/compare/v1.3.0...v1.3.1) (2026-11-13)
 
 
